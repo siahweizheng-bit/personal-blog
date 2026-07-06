@@ -1,0 +1,148 @@
+---
+import Base from '../../layouts/Base.astro';
+import SubscribeForm from '../../components/SubscribeForm.astro';
+import Tr from '../../components/Tr.astro';
+import { site } from '../../config.js';
+
+const all = site.products || [];
+const isImg = (c) => typeof c === 'string' && c.startsWith('/');
+const bundleSlugs = ['civic-bundle', '5in1-civic-bundle', '7in1-civic-bundle'];
+const paidP = all.filter((p) => (p.status === 'coming' || p.status === 'available') && !bundleSlugs.includes(p.slug));
+const bundles = bundleSlugs.map((s) => all.find((p) => p.slug === s)).filter(Boolean);
+const hasPaid = paidP.length > 0 || bundles.length > 0;
+---
+
+<Base title="付费资源" description="公民白话文深度手册 — 中英双版，事实经官方来源核实">
+  <div class="wrap">
+
+    <!-- 面包屑 -->
+    <nav class="breadcrumb" style="padding-top:1.4rem">
+      <a href="/resources"><Tr zh="资源" en="Resources" /></a>
+      <span class="bc-sep">／</span>
+      <span class="bc-current"><Tr zh="付费资源" en="Paid guides" /></span>
+    </nav>
+
+    <header class="res-hero reveal">
+      <span class="res-sub-badge paid-badge">📘 <Tr zh="深度手册" en="In-depth guides" /></span>
+      <h1><Tr zh="付费资源" en="Paid guides" /></h1>
+      <p><Tr
+        zh="每本手册是一套能直接用的精编知识——30 分钟读完，核心内容收进口袋。中英双版，事实经官方来源核实，严守中立。"
+        en="Each guide is a compact, ready-to-use knowledge kit — read in 30 minutes, core knowledge in your pocket. Bilingual, officially sourced, strictly neutral." /></p>
+    </header>
+
+    <!-- 购买流程说明 -->
+    <div class="buy-how reveal">
+      <div class="bh-step"><div class="bh-number">1</div><Tr zh="填表留下名字 + email" en="Fill the form: name + email" /></div>
+      <div class="bh-arrow">→</div>
+      <div class="bh-step"><div class="bh-number">2</div><Tr zh="收到 DuitNow 付款码" en="Get a DuitNow QR by email" /></div>
+      <div class="bh-arrow">→</div>
+      <div class="bh-step"><div class="bh-number">3</div><Tr zh="付款后把 PDF 发给你" en="We email you the PDF" /></div>
+    </div>
+
+    {hasPaid ? (
+      <>
+        <!-- 优惠包（3 / 5 / 7 合一） -->
+        {bundles.map((b) => (
+          <div class="bundle-card reveal">
+            <div class="bundle-emoji">
+              {isImg(b.cover) ? <img src={b.cover} alt={b.title} /> : b.cover}
+            </div>
+            <div class="bundle-main">
+              <div class="bundle-head">
+                <h3><Tr zh={b.title} en={b.titleEn} /></h3>
+                {b.status === 'coming'
+                  ? <span class="rcard-badge soon"><Tr zh="即将上架" en="Coming soon" /></span>
+                  : <span class="bundle-price-wrap"><s class="orig-price">{b.originalPrice}</s><span class="bundle-price">{b.price}</span></span>}
+              </div>
+              <p class="rcard-sum"><Tr zh={b.summary} en={b.summaryEn} /></p>
+              {b.includes && (
+                <ul class="rcard-inc bundle-inc">
+                  {b.includes.map((it) => (<li><span class="ck">✓</span> <Tr zh={it.zh} en={it.en} /></li>))}
+                </ul>
+              )}
+              <div class="bundle-foot">
+                {b.status === 'coming' ? (
+                  <SubscribeForm variant="inline" source={"notify-" + b.slug} cta="上架通知我" ctaEn="Notify me"
+                    okZh="✓ 已记下！优惠包上架时第一时间 email 你。" okEn="✓ Noted! We'll email you first when the bundle launches." />
+                ) : (
+                  <SubscribeForm variant="inline" source={"buy-" + b.slug} cta="购买整套（DuitNow）" ctaEn="Buy bundle (DuitNow)"
+                    okZh="✓ 已收到！请查收邮箱，我们会发你 DuitNow 付款码与领取方式。" okEn="✓ Got it! Check your inbox for the DuitNow QR and delivery details." />
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+        <p></p>
+        <div class="res-grid reveal">
+          {paidP.map((p) => (
+            <article class="rcard paid">
+              <div class="rcard-cover navy">
+                {isImg(p.cover) ? <img src={p.cover} alt={p.title} /> : <span class="rcard-emoji">{p.cover}</span>}
+                {p.status === 'coming'
+                  ? <span class="rcard-badge soon"><Tr zh="即将上架" en="Coming soon" /></span>
+                  : <span class="rcard-badge price">{p.price}</span>}
+              </div>
+              <div class="rcard-body">
+                <h3><Tr zh={p.title} en={p.titleEn} /></h3>
+                <p class="rcard-sum"><Tr zh={p.summary} en={p.summaryEn} /></p>
+                {p.includes && (
+                  <ul class="rcard-inc">
+                    {p.includes.map((it) => (<li><span class="ck">✓</span> <Tr zh={it.zh} en={it.en} /></li>))}
+                  </ul>
+                )}
+                <div class="rcard-foot">
+                  {p.status === 'coming' && (
+                    <Fragment>
+                      <p class="rcard-note"><Tr zh="订阅，上架第一时间通知你（订阅者享早鸟价）。" en="Subscribe — be first to know when it launches (subscribers get early-bird pricing)." /></p>
+                      <SubscribeForm variant="inline" source={"notify-" + p.slug} cta="上架通知我" ctaEn="Notify me"
+                        okZh="✓ 已记下！上架时第一时间 email 你，并附早鸟价。" okEn="✓ Noted! We'll email you first at launch with an early-bird price." />
+                    </Fragment>
+                  )}
+                  {p.status === 'available' && (
+                    <Fragment>
+                      <div class="rcard-price-row"><s class="orig-price">{p.originalPrice}</s><span class="rcard-price">{p.price}</span></div>
+                      <p class="rcard-note"><Tr zh="填表后我们 email 给你 DuitNow 付款码；付款后把 PDF 发给你。" en="After you submit, we'll email you a DuitNow QR; once paid, we'll send the PDF." /></p>
+                      <SubscribeForm variant="inline" source={"buy-" + p.slug} cta="购买（DuitNow）" ctaEn="Buy (DuitNow)"
+                        okZh="✓ 已收到！请查收邮箱，我们会发你 DuitNow 付款码与领取方式。" okEn="✓ Got it! Check your inbox — we'll send the DuitNow QR and how to receive it." />
+                    </Fragment>
+                  )}
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </>
+    ) : (
+      <p class="empty-note reveal"><Tr zh="深度手册正在制作中，敬请订阅以获取上架通知。" en="Guides are in the works — subscribe to get notified at launch." /></p>
+    )}
+
+    <p class="resources-note reveal">
+      <Tr
+        zh="提示：我们始终免费提供基础的公民知识普及；如果你需要更进一步的、网站未公开的独家深度解构，欢迎购买我们的完整手册。这是我们得以持续运营并保持独立性的核心基石"
+        en="Note: We always provide basic civic education free of charge; if you require more in-depth, exclusive analysis not available on our website, please purchase our complete handbook. This is the core foundation upon which we continue to operate and maintain our independence."
+      />
+    </p>
+
+    <div class="res-footer-note reveal">
+      <a class="res-also-link" href="/resources/free">
+        <Tr zh="也看看免费资源 →" en="Check out our free resources →" />
+      </a>
+    </div>
+
+  </div>
+</Base>
+
+<style>
+.res-hero { padding: 1.5rem 0 1.5rem; }
+.res-hero h1 { font-size: 2.2rem; margin: 0.6rem 0 0.5rem; letter-spacing: -0.02em; }
+.res-hero p { color: var(--soft); font-size: 1.02rem; max-width: 48rem; line-height: 1.75; margin: 0; }
+.res-sub-badge {
+  display: inline-block; font-size: 0.82rem; font-weight: 700;
+  padding: 0.3rem 0.85rem; border-radius: 99px; margin-bottom: 0.6rem;
+}
+.free-badge { background: #e6f4ee; color: #1a7f4b; border: 1px solid #b2dfc5; }
+.paid-badge { background: var(--accent-soft); color: var(--accent); border: 1px solid #c8d9f5; }
+.res-footer-note { margin: 2rem 0 1rem; text-align: center; }
+.res-also-link { color: var(--accent); font-weight: 700; text-decoration: none; font-size: 0.97rem; }
+.res-also-link:hover { text-decoration: underline; }
+</style>
