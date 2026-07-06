@@ -1,0 +1,531 @@
+---
+import Base from '../../layouts/Base.astro';
+import Subscribe from '../../components/Subscribe.astro';
+import Tr from '../../components/Tr.astro';
+import { site } from '../../config.js';
+import { getDashboard } from '../../lib/dashboard.js';
+import { getNews, getNewsHtml, hasNewsPage } from '../../lib/news.js';
+
+export async function getStaticPaths() {
+  const dashboards = site.dashboards || [];
+  const dashSlugs = new Set(dashboards.map((d) => d.slug));
+  const dashPaths = dashboards.map((d) => ({ params: { slug: d.slug }, props: { kind: 'dashboard', cfg: d } }));
+  const news = await getNews();
+  const postPaths = news
+    .filter((n) => hasNewsPage(n) && !dashSlugs.has(n.slug))
+    .map((n) => ({ params: { slug: n.slug }, props: { kind: 'post', post: n, content: getNewsHtml(n) } }));
+  return [...dashPaths, ...postPaths];
+}
+
+const { kind } = Astro.props;
+
+function fmtDate(d, en) {
+  if (!d) return '';
+  try { return new Date(d).toLocaleDateString(en ? 'en-US' : 'zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }); }
+  catch (e) { return d; }
+}
+
+let cfg, data, pct, seatBarMax, hide;
+if (kind === 'dashboard') {
+  cfg = Astro.props.cfg;
+  data = await getDashboard(cfg);
+  pct = (n) => (n == null ? '—' : `${n}%`);
+  seatBarMax = Math.max(data.totalSeats, ...data.coalitions.map((c) => c.seats), 1);
+  // 各区块初始可见性（客户端实时刷新时会再切换）
+  hide = {
+    countdown: data.hasResults,
+    coalition: !data.hasResults,
+    voteshare: !data.hasResults,
+    seats: data.seats.length === 0,
+    pending: !(data.seats.length === 0 && !data.hasResults),
+  };
+}
+
+// ── 目录（TOC）：给标题加 id 并提取目录 ──
+function slugifyId(text) {
+  const base = text.trim().replace(/\s+/g, '-').replace(/[^\w一-鿿-]/g, '').toLowerCase();
+  return base || 'heading';
+}
+function processHtml(html) {
+  if (!html) return { processed: '', headings: [] };
+  const headings = [];
+  const seen = {};
+  const processed = html.replace(/<(h[23])([^>]*)>([\s\S]*?)<\/\1>/gi, (_, tag, attrs, inner) => {
+    const text = inner.replace(/<[^>]+>/g, '').trim();
+    let id = slugifyId(text);
+    seen[id] = (seen[id] || 0) + 1;
+    if (seen[id] > 1) id = `${id}-${seen[id]}`;
+    headings.push({ level: parseInt(tag[1]), text, id });
+    return `<${tag}${attrs} id="${id}">${inner}</${tag}>`;
+  });
+  return { processed, headings };
+}
+// ── 字数统计 & 阅读时间 ──
+function countWords(html) {
+  if (!html) return { zhChars: 0, enWords: 0 };
+  const text = html.replace(/<[^>]+>/g, ' ').replace(/&[^;]+;/g, ' ');
+  const zhChars = (text.match(/[一-鿿㐀-䶿]/g) || []).length;
+  const enWords = (text.replace(/[一-鿿㐀-䶿]/g, ' ').match(/\b[a-zA-Z]+\b/g) || []).length;
+  return { zhChars, enWords };
+}
+
+let post, content, bilingual;
+let zhHtml = '', enHtml = '', zhHeadings = [], enHeadings = [], hasToc = false;
+let readTimeZh = '', readTimeEn = '', hasWordcount = false;
+if (kind === 'post') {
+  post = Astro.props.post;
+  content = Astro.props.content;
+  bilingual = Boolean(content.en);
+  ({ processed: zhHtml, headings: zhHeadings } = processHtml(content.zh));
+  ({ processed: enHtml, headings: enHeadings } = processHtml(content.en));
+  hasToc = Math.max(zhHeadings.length, enHeadings.length) >= 2;
+  const { zhChars, enWords } = countWords(content.zh || content.en);
+  hasWordcount = (zhChars + enWords) > 0;
+  // 中文约 350 字/分钟，英文约 200 词/分钟
+  const readMin = Math.max(1, Math.round((zhChars || 0) / 350 + (enWords || 0) / 200));
+  readTimeZh = zhChars > 0 ? `${zhChars} 字 · 约 ${readMin} 分钟` : `${enWords} 词 · 约 ${readMin} 分钟`;
+  readTimeEn = zhChars > 0 ? `${zhChars} chars · ~${readMin} min` : `${enWords} words · ~${readMin} min`;
+}
+---
+
+{kind === 'dashboard' ? (
+  <Base title={cfg.title} description={`${cfg.title} —— ${site.name}`}>
+    <div class="wrap"
+      id="db-root"
+      data-seats-csv={cfg.seatsCsv || ''}
+      data-coalitions-csv={cfg.coalitionsCsv || ''}
+      data-total-seats={String(cfg.totalSeats || 0)}
+      data-registered={cfg.registeredVoters || ''}
+      data-colors={JSON.stringify(site.coalitionColors || {})}
+      data-refresh="30">
+
+      <nav class="db-back"><a href="/news">← <Tr zh="返回新闻" en="Back to News" /></a></nav>
+
+      <header class="db-head">
+        <span class="db-kicker"><Tr zh="州选仪表板 · 中立追踪" en="Election Dashboard · Neutral tracking" /></span>
+        <h1><Tr zh={cfg.title} en={cfg.titleEn} /></h1>
+        {cfg.pollingDate ? (
+          <p class="db-sub"><Tr zh="投票日" en="Polling day" />：<strong>{fmtDate(cfg.pollingDate)}</strong></p>
+        ) : (
+          <p class="db-sub"><Tr zh="投票日待定" en="Polling day to be announced" /></p>
+        )}
+      </header>
+
+      {cfg.seatsCsv && (
+        <div class="db-live-bar">
+          <span class="db-live-dot"></span>
+          <span class="db-live-status"><Tr zh="实时更新" en="Live" /> · <Tr zh="更新于" en="Updated" /> <b id="db-updated">—</b></span>
+          <button id="db-refresh" class="db-live-btn" type="button"><Tr zh="刷新" en="Refresh" /></button>
+          <label class="db-live-auto"><input type="checkbox" id="db-auto" checked /> <Tr zh="自动" en="Auto" /></label>
+        </div>
+      )}
+
+      <div id="db-countdown-wrap" style={hide.countdown ? 'display:none' : ''}>
+        <div class="db-countdown" data-polling={cfg.pollingDate}>
+          <div class="db-cd-row">
+            <div class="db-cd-cell"><span class="db-cd-num" data-cd="d">—</span><span class="db-cd-lbl"><Tr zh="天" en="days" /></span></div>
+            <div class="db-cd-cell"><span class="db-cd-num" data-cd="h">—</span><span class="db-cd-lbl"><Tr zh="时" en="hrs" /></span></div>
+            <div class="db-cd-cell"><span class="db-cd-num" data-cd="m">—</span><span class="db-cd-lbl"><Tr zh="分" en="min" /></span></div>
+            <div class="db-cd-cell"><span class="db-cd-num" data-cd="s">—</span><span class="db-cd-lbl"><Tr zh="秒" en="sec" /></span></div>
+          </div>
+          <p class="db-cd-note"><Tr zh="距离投票日 · 成绩将于点票后实时更新" en="Until polling day · results update after counting" /></p>
+        </div>
+      </div>
+
+      <div class="db-kpis">
+        <div class="db-kpi"><span class="db-kpi-num">{data.totalSeats || '—'}</span><span class="db-kpi-lbl"><Tr zh="议席总数" en="Total seats" /></span></div>
+        <div class="db-kpi"><span class="db-kpi-num">{data.majority || '—'}</span><span class="db-kpi-lbl"><Tr zh="执政门槛" en="Majority needed" /></span></div>
+        <div class="db-kpi"><span class="db-kpi-num">{cfg.registeredVoters || '—'}</span><span class="db-kpi-lbl"><Tr zh="登记选民" en="Registered voters" /></span></div>
+        <div class="db-kpi"><span class="db-kpi-num" id="db-turnout">{pct(data.turnout)}</span><span class="db-kpi-lbl"><Tr zh="投票率" en="Turnout" /></span></div>
+      </div>
+
+      <section class="db-section" id="db-coalition-section" style={hide.coalition ? 'display:none' : ''}>
+        <h2 class="db-h2"><Tr zh="阵营席位统计" en="Seats by coalition" /></h2>
+        <p class="db-hint"><Tr zh="虚线为执政门槛" en="Dashed line marks the majority threshold" />（<span id="db-maj-num">{data.majority}</span>）</p>
+        <div class="db-bars" id="db-bars" style={`--majority:${data.totalSeats ? (data.majority / seatBarMax * 100) : 0}%`}>
+          {data.coalitions.map((c) => (
+            <div class="db-bar-row">
+              <span class="db-bar-name">{c.name}</span>
+              <div class="db-bar-track">
+                <div class="db-bar-fill" style={`width:${c.seats / seatBarMax * 100}%;background:${c.color}`}>
+                  {c.seats >= data.majority && <span class="db-bar-win">✓</span>}
+                </div>
+                <span class="db-bar-maj"></span>
+              </div>
+              <span class="db-bar-val">{c.seats}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section class="db-section" id="db-voteshare-section" style={hide.voteshare ? 'display:none' : ''}>
+        <h2 class="db-h2"><Tr zh="总得票率" en="Overall vote share" /></h2>
+        <div class="db-vote-stack" id="db-vote-stack">
+          {data.coalitions.filter((c) => c.votePct != null && c.votePct > 0).map((c) => (
+            <div class="db-vote-seg" style={`width:${c.votePct}%;background:${c.color}`} title={`${c.name} ${c.votePct}%`}>
+              {c.votePct >= 8 && <span>{c.votePct}%</span>}
+            </div>
+          ))}
+        </div>
+        <div class="db-legend" id="db-legend">
+          {data.coalitions.map((c) => (
+            <span class="db-leg-item"><i style={`background:${c.color}`}></i>{c.name}{c.votePct != null ? ` · ${c.votePct}%` : ''}</span>
+          ))}
+        </div>
+      </section>
+
+      <section class="db-section" id="db-seats-section" style={hide.seats ? 'display:none' : ''}>
+        <h2 class="db-h2"><Tr zh="逐区候选人与得票率" en="Candidates & vote share by seat" /></h2>
+        <div class="db-table-tools">
+          <input class="db-search" type="search" placeholder="搜索选区 / 候选人 / 政党…" data-ph-en="Search seat / candidate / party…" />
+          <div class="db-filters" id="db-chips">
+            <button class="db-chip db-chip-on" data-f="all"><Tr zh="全部" en="All" /></button>
+            {data.coalitions.map((c) => (
+              <button class="db-chip" data-f={c.name}><i style={`background:${c.color}`}></i>{c.name}</button>
+            ))}
+          </div>
+        </div>
+        <div class="db-seats" id="db-seats">
+          {data.seats.map((s) => (
+            <div class="db-seat" data-coalition={s.winnerCoalition || ''} data-search={`${s.seatCode} ${s.seat} ${s.seatEn} ${s.candidates.map((c) => c.candidate + ' ' + c.party + ' ' + c.coalition).join(' ')}`.toLowerCase()}>
+              <div class="db-seat-head">
+                <span class="db-seat-code">{s.seatCode}</span>
+                <span class="db-seat-name">{s.seat}{s.seatEn ? <em> · {s.seatEn}</em> : null}</span>
+                {s.declared
+                  ? <span class="db-seat-maj"><Tr zh="多数票" en="Majority" /> {Number(s.majority).toLocaleString()}</span>
+                  : <span class="db-seat-pending">{s.status || '待公布'}</span>}
+              </div>
+              <div class="db-cands">
+                {s.candidates.map((c, i) => (
+                  <div class={`db-cand${s.declared && i === 0 ? ' db-cand-win' : ''}`}>
+                    <span class="db-cand-dot" style={`background:${c.color}`}></span>
+                    <span class="db-cand-info">
+                      <span class="db-cand-name">{c.candidate || '—'}{s.declared && i === 0 ? ' ✓' : ''}</span>
+                      <span class="db-cand-party">{[c.party, c.coalition].filter(Boolean).join(' · ') || '—'}</span>
+                    </span>
+                    <span class="db-cand-track"><span class="db-cand-fill" style={`width:${c.votePct || 0}%;background:${c.color}`}></span></span>
+                    <span class="db-cand-pct">{c.votePct != null ? `${c.votePct}%` : '—'}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <p class="db-empty-search" style="display:none"><Tr zh="没有匹配的选区。" en="No matching seats." /></p>
+      </section>
+
+      <div id="db-pending" class="db-pending" style={hide.pending ? 'display:none' : ''}>
+        <div class="db-pending-ic">🗳️</div>
+        <h2><Tr zh="候选人与成绩待公布" en="Candidates & results pending" /></h2>
+        <p><Tr zh="提名与点票信息公布后，这里会按选区列出候选人及其得票率。" en="Once nominations and counting are in, this page lists candidates and their vote share, seat by seat." /></p>
+        <a class="support-btn" href="/news"><Tr zh="先看其他新闻 →" en="Browse other news →" /></a>
+      </div>
+
+      <p class="db-source"><Tr zh="数据以官方选举委员会（SPR）公布为准；本仪表板仅作中立信息整理，不代表任何立场。" en="Figures follow the official Election Commission (SPR). This dashboard is neutral information only and takes no side." /></p>
+
+      <Subscribe />
+    </div>
+  </Base>
+) : (
+  <Base title={post.title} description={post.summary}>
+    <div class={hasToc ? 'wrap-article' : 'wrap-read'}>
+      <nav class="breadcrumb" aria-label="面包屑导航">
+        <a href="/news"><Tr zh="新闻" en="News" /></a>
+        <span class="bc-sep">／</span>
+        <span class="bc-current"><Tr zh={post.title} en={post.titleEn || post.title} /></span>
+      </nav>
+      <div class={hasToc ? 'article-layout' : ''}>
+
+        {hasToc && (
+          <aside class="toc-sidebar">
+            <div class="toc-label"><Tr zh="目录" en="Contents" /></div>
+            <nav class="toc-nav" aria-label="文章目录">
+              {zhHeadings.map((h) => (
+                <a href={`#${h.id}`} class={`toc-link toc-h${h.level}`} data-toc data-toc-lang="zh">{h.text}</a>
+              ))}
+              {enHeadings.map((h) => (
+                <a href={`#${h.id}`} class={`toc-link toc-h${h.level}`} data-toc data-toc-lang="en">{h.text}</a>
+              ))}
+            </nav>
+          </aside>
+        )}
+
+        <div class="article-main">
+          <article>
+            <header class="post-head">
+              <h1><Tr zh={post.title} en={post.titleEn || post.title} /></h1>
+              <div class="meta">
+                <span class="news-tag"><Tr zh={post.tag} en={post.tagEn} /></span>
+                {post.date && <> · <Tr zh={fmtDate(post.date)} en={fmtDate(post.date, true)} /></>}
+                {hasWordcount && (
+                  <span class="meta-wordcount"> · <Tr zh={readTimeZh} en={readTimeEn} /></span>
+                )}
+              </div>
+            </header>
+            <div class={`article-body${bilingual ? ' bilingual' : ''}`}>
+              <div class="prose prose-zh" set:html={zhHtml} />
+              {bilingual
+                ? <div class="prose prose-en" set:html={enHtml} />
+                : <p class="zh-only-note">This article is currently only available in Chinese. / 本文暂无英文版。</p>}
+            </div>
+            <a class="back" href="/news"><Tr zh="← 返回新闻" en="← Back to News" /></a>
+          </article>
+          <Subscribe />
+        </div>
+
+      </div>
+    </div>
+  </Base>
+)}
+
+<style>
+  .zh-only-note { display:none; margin-top:1.5rem; padding:.8rem 1.1rem; background:#f8f5ee; border-left:3px solid var(--gold); border-radius:0 8px 8px 0; font-size:.9rem; color:var(--soft); }
+  :global([data-lang="en"]) .zh-only-note { display:block; }
+
+  /* ── 文章目录（TOC）布局，与文章页一致 ── */
+  .wrap-article { max-width: 1120px; margin: 0 auto; padding: 0 2rem; }
+  .article-layout { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 3rem; align-items: start; }
+  .toc-sidebar { position: sticky; top: 2rem; max-height: calc(100vh - 4rem); overflow-y: auto; padding-bottom: 1rem; }
+  .toc-label { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--soft); margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--line); }
+  .toc-nav { display: flex; flex-direction: column; gap: 0.15rem; }
+  .toc-link { display: block; font-size: 0.875rem; line-height: 1.45; color: var(--soft); text-decoration: none; padding: 0.3rem 0.6rem; border-left: 2px solid transparent; border-radius: 0 4px 4px 0; transition: color 0.15s, border-color 0.15s, background 0.15s; word-break: break-all; }
+  .toc-link:hover { color: var(--text); background: var(--accent-soft); }
+  .toc-h3 { padding-left: 1.3rem; font-size: 0.82rem; }
+  .toc-link.toc-active { color: var(--accent); border-left-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+  .meta-wordcount { color: var(--soft); }
+
+  @media (max-width: 860px) {
+    .wrap-article { padding: 0 1.25rem; }
+    .article-layout { grid-template-columns: 1fr; gap: 0; }
+    .toc-sidebar { position: static; max-height: none; background: var(--accent-soft); border-radius: 10px; padding: 1rem 1.2rem; margin-bottom: 1.5rem; }
+    .toc-label { margin-bottom: 0.5rem; }
+  }
+
+  /* 目录语言切换 */
+  :global([data-lang="zh"]) [data-toc-lang="en"] { display: none; }
+  :global([data-lang="en"]) [data-toc-lang="zh"] { display: none; }
+</style>
+
+<script>
+  // ── 文章目录：平滑滚动 + 当前段落高亮（新闻文章页） ──
+  (function () {
+    const links = document.querySelectorAll('.toc-link[data-toc]');
+    if (!links.length) return;
+    links.forEach((l) => {
+      l.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = document.getElementById(l.getAttribute('href').slice(1));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+    const targets = [...links]
+      .map((l) => document.getElementById(l.getAttribute('href').slice(1)))
+      .filter(Boolean);
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            links.forEach((l) => l.classList.remove('toc-active'));
+            const active = document.querySelector(`.toc-link[href="#${e.target.id}"]`);
+            if (active) active.classList.add('toc-active');
+          }
+        });
+      },
+      { rootMargin: '-15% 0px -70% 0px', threshold: 0 }
+    );
+    targets.forEach((t) => obs.observe(t));
+  })();
+</script>
+
+<script>
+  import { rowsToObjects, computeDashboard } from '../../lib/dashboardCore.js';
+
+  const root = document.getElementById('db-root');
+
+  // ── 倒计时（保持独立） ──
+  (function () {
+    const box = document.querySelector('.db-countdown');
+    if (!box) return;
+    const polling = box.getAttribute('data-polling');
+    const set = (k, v) => { const el = box.querySelector(`[data-cd="${k}"]`); if (el) el.textContent = String(v); };
+    if (!polling) { box.querySelectorAll('.db-cd-num').forEach((n) => (n.textContent = '—')); return; }
+    const target = new Date(polling + 'T08:00:00').getTime();
+    function tick() {
+      const diff = target - Date.now();
+      if (diff <= 0) { set('d', 0); set('h', 0); set('m', 0); set('s', 0); return; }
+      set('d', Math.floor(diff / 86400000));
+      set('h', Math.floor((diff % 86400000) / 3600000));
+      set('m', Math.floor((diff % 3600000) / 60000));
+      set('s', Math.floor((diff % 60000) / 1000));
+    }
+    tick(); setInterval(tick, 1000);
+  })();
+
+  // ── 逐区搜索 + 阵营筛选（对当前 DOM 生效，重渲染后再调用一次绑定/应用） ──
+  let activeFilter = 'all';
+  function applyFilter() {
+    const search = document.querySelector('.db-search');
+    const seats = Array.from(document.querySelectorAll('.db-seat'));
+    const emptyMsg = document.querySelector('.db-empty-search');
+    const q = (search && search.value ? search.value : '').trim().toLowerCase();
+    let shown = 0;
+    seats.forEach((r) => {
+      const okF = activeFilter === 'all' || r.getAttribute('data-coalition') === activeFilter;
+      const okQ = !q || (r.getAttribute('data-search') || '').includes(q);
+      const show = okF && okQ;
+      r.style.display = show ? '' : 'none';
+      if (show) shown++;
+    });
+    if (emptyMsg) emptyMsg.style.display = shown ? 'none' : 'block';
+  }
+  function bindTools() {
+    const search = document.querySelector('.db-search');
+    if (search && !search.dataset.bound) { search.dataset.bound = '1'; search.addEventListener('input', applyFilter); }
+    document.querySelectorAll('.db-chip').forEach((c) => {
+      if (c.dataset.bound) return; c.dataset.bound = '1';
+      c.addEventListener('click', () => {
+        document.querySelectorAll('.db-chip').forEach((x) => x.classList.remove('db-chip-on'));
+        c.classList.add('db-chip-on');
+        activeFilter = c.getAttribute('data-f');
+        applyFilter();
+      });
+    });
+  }
+  bindTools();
+  document.querySelectorAll('.db-search').forEach((s) => s.addEventListener('input', applyFilter));
+  document.querySelectorAll('.db-chip').forEach((c) => c.addEventListener('click', () => {}));
+  bindTools();
+
+  // ── 实时刷新 ──
+  if (root && root.getAttribute('data-seats-csv')) {
+    const seatsCsv = root.getAttribute('data-seats-csv');
+    const coalitionsCsv = root.getAttribute('data-coalitions-csv');
+    const totalSeats = parseInt(root.getAttribute('data-total-seats') || '0', 10);
+    const registeredVoters = root.getAttribute('data-registered') || '';
+    let colors = {}; try { colors = JSON.parse(root.getAttribute('data-colors') || '{}'); } catch (e) {}
+    const refreshSec = Math.max(10, parseInt(root.getAttribute('data-refresh') || '30', 10));
+
+    const curLang = () => (document.documentElement.getAttribute('data-lang') === 'en' ? 'en' : 'zh');
+    const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
+    const T = (zh, en) => `<span class="tr" data-zh="${esc(zh)}" data-en="${esc(en)}">${esc(curLang() === 'en' ? en : zh)}</span>`;
+
+    async function fetchCsv(url) {
+      if (!url) return [];
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return rowsToObjects(await res.text());
+    }
+
+    function renderBars(d, seatBarMax) {
+      const bars = document.getElementById('db-bars');
+      if (!bars) return;
+      bars.style.setProperty('--majority', (d.totalSeats ? (d.majority / seatBarMax * 100) : 0) + '%');
+      bars.innerHTML = d.coalitions.map((c) => `
+        <div class="db-bar-row">
+          <span class="db-bar-name">${esc(c.name)}</span>
+          <div class="db-bar-track">
+            <div class="db-bar-fill" style="width:${c.seats / seatBarMax * 100}%;background:${esc(c.color)}">${c.seats >= d.majority ? '<span class="db-bar-win">✓</span>' : ''}</div>
+            <span class="db-bar-maj"></span>
+          </div>
+          <span class="db-bar-val">${c.seats}</span>
+        </div>`).join('');
+      const mn = document.getElementById('db-maj-num'); if (mn) mn.textContent = String(d.majority);
+    }
+
+    function renderVote(d) {
+      const stack = document.getElementById('db-vote-stack');
+      const legend = document.getElementById('db-legend');
+      if (stack) stack.innerHTML = d.coalitions.filter((c) => c.votePct != null && c.votePct > 0)
+        .map((c) => `<div class="db-vote-seg" style="width:${c.votePct}%;background:${esc(c.color)}" title="${esc(c.name)} ${c.votePct}%">${c.votePct >= 8 ? c.votePct + '%' : ''}</div>`).join('');
+      if (legend) legend.innerHTML = d.coalitions
+        .map((c) => `<span class="db-leg-item"><i style="background:${esc(c.color)}"></i>${esc(c.name)}${c.votePct != null ? ' · ' + c.votePct + '%' : ''}</span>`).join('');
+    }
+
+    function renderChips(d) {
+      const chips = document.getElementById('db-chips');
+      if (!chips) return;
+      const names = d.coalitions.map((c) => c.name);
+      if (activeFilter !== 'all' && !names.includes(activeFilter)) activeFilter = 'all';
+      chips.innerHTML = `<button class="db-chip${activeFilter === 'all' ? ' db-chip-on' : ''}" data-f="all">${T('全部', 'All')}</button>` +
+        d.coalitions.map((c) => `<button class="db-chip${activeFilter === c.name ? ' db-chip-on' : ''}" data-f="${esc(c.name)}"><i style="background:${esc(c.color)}"></i>${esc(c.name)}</button>`).join('');
+    }
+
+    function renderSeats(d) {
+      const wrap = document.getElementById('db-seats');
+      if (!wrap) return;
+      wrap.innerHTML = d.seats.map((s) => {
+        const head = s.declared
+          ? `<span class="db-seat-maj">${T('多数票', 'Majority')} ${Number(s.majority).toLocaleString()}</span>`
+          : `<span class="db-seat-pending">${esc(s.status || '待公布')}</span>`;
+        const cands = s.candidates.map((c, i) => `
+          <div class="db-cand${s.declared && i === 0 ? ' db-cand-win' : ''}">
+            <span class="db-cand-dot" style="background:${esc(c.color)}"></span>
+            <span class="db-cand-info">
+              <span class="db-cand-name">${esc(c.candidate || '—')}${s.declared && i === 0 ? ' ✓' : ''}</span>
+              <span class="db-cand-party">${esc([c.party, c.coalition].filter(Boolean).join(' · ') || '—')}</span>
+            </span>
+            <span class="db-cand-track"><span class="db-cand-fill" style="width:${c.votePct || 0}%;background:${esc(c.color)}"></span></span>
+            <span class="db-cand-pct">${c.votePct != null ? c.votePct + '%' : '—'}</span>
+          </div>`).join('');
+        const search = `${s.seatCode} ${s.seat} ${s.seatEn} ${s.candidates.map((c) => c.candidate + ' ' + c.party + ' ' + c.coalition).join(' ')}`.toLowerCase();
+        return `<div class="db-seat" data-coalition="${esc(s.winnerCoalition || '')}" data-search="${esc(search)}">
+          <div class="db-seat-head">
+            <span class="db-seat-code">${esc(s.seatCode)}</span>
+            <span class="db-seat-name">${esc(s.seat)}${s.seatEn ? '<em> · ' + esc(s.seatEn) + '</em>' : ''}</span>
+            ${head}
+          </div>
+          <div class="db-cands">${cands}</div>
+        </div>`;
+      }).join('');
+    }
+
+    const show = (id, on) => { const el = document.getElementById(id); if (el) el.style.display = on ? '' : 'none'; };
+
+    function renderAll(d) {
+      const seatBarMax = Math.max(d.totalSeats, ...d.coalitions.map((c) => c.seats), 1);
+      const turnoutEl = document.getElementById('db-turnout');
+      if (turnoutEl) turnoutEl.textContent = d.turnout == null ? '—' : d.turnout + '%';
+      show('db-countdown-wrap', !d.hasResults);
+      show('db-coalition-section', d.hasResults);
+      show('db-voteshare-section', d.hasResults);
+      show('db-seats-section', d.seats.length > 0);
+      show('db-pending', d.seats.length === 0 && !d.hasResults);
+      if (d.hasResults) { renderBars(d, seatBarMax); renderVote(d); }
+      if (d.seats.length > 0) { renderChips(d); renderSeats(d); }
+      bindTools();
+      applyFilter();
+    }
+
+    const stamp = () => {
+      const el = document.getElementById('db-updated');
+      if (el) el.textContent = new Date().toLocaleTimeString(curLang() === 'en' ? 'en-US' : 'zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    };
+    const bar = document.querySelector('.db-live-bar');
+    const setState = (cls) => { if (bar) { bar.classList.remove('is-loading', 'is-error'); if (cls) bar.classList.add(cls); } };
+
+    async function refresh() {
+      setState('is-loading');
+      try {
+        const [coRows, candRows] = await Promise.all([fetchCsv(coalitionsCsv), fetchCsv(seatsCsv)]);
+        const d = computeDashboard({ coRows, candRows, totalSeats, registeredVoters, colors });
+        renderAll(d);
+        stamp();
+        setState('');
+      } catch (e) {
+        console.warn('[dashboard] 实时刷新失败：', e.message);
+        setState('is-error');
+      }
+    }
+
+    let timer = null;
+    const auto = document.getElementById('db-auto');
+    const startTimer = () => { stopTimer(); if (auto && auto.checked) timer = setInterval(refresh, refreshSec * 1000); };
+    const stopTimer = () => { if (timer) { clearInterval(timer); timer = null; } };
+    const btn = document.getElementById('db-refresh');
+    if (btn) btn.addEventListener('click', refresh);
+    if (auto) auto.addEventListener('change', () => { if (auto.checked) { refresh(); startTimer(); } else stopTimer(); });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) stopTimer(); else startTimer(); });
+
+    refresh().then(startTimer);
+  }
+</script>
