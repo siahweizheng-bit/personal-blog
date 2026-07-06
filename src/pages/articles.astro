@@ -1,0 +1,60 @@
+---
+import Base from '../layouts/Base.astro';
+import Subscribe from '../components/Subscribe.astro';
+import PostList from '../components/PostList.astro';
+import Tr from '../components/Tr.astro';
+import { site } from '../config.js';
+import { getPosts, isNotionConfigured, inCategory } from '../lib/notion.js';
+
+const posts = await getPosts();
+const catNames = site.categories.map((c) => c.name);
+
+const groups = site.categories
+  .map((c) => ({ category: c, items: posts.filter((p) => inCategory(p, c)) }))
+  .filter((g) => g.items.length > 0);
+const uncategorized = posts.filter((p) => p.access !== 'member' && !p.tags.some((t) => catNames.includes(t)));
+---
+
+<Base title="文章" description={site.intro}>
+  <div class="wrap">
+    <header class="page-hero">
+      <span class="hero-kicker"><Tr zh="文章 · ARTICLES" en="ARTICLES" /></span>
+      <h1><Tr zh="全部文章" en="All articles" /></h1>
+      <p class="page-hero-lead"><Tr zh="按主题浏览公民教育的点点滴滴——制度、权利、选举与公共政策，中英双语。" en="Browse civic education by topic — institutions, rights, elections and public policy, in both languages." /></p>
+    </header>
+
+    {!isNotionConfigured && (
+      <div class="notice">
+        当前显示<strong>示例文章</strong>。配置 Google 表格后，这里会自动换成真实文章。
+      </div>
+    )}
+
+    {groups.length === 0 && uncategorized.length === 0 && (
+      <p class="empty-note"><Tr zh="文章即将上线，敬请订阅。" en="Articles coming soon — subscribe to stay posted." /></p>
+    )}
+
+    {groups.map((g) => (
+      <section class={`cat-group${g.category.memberOnly ? ' cat-group-member' : ''}`}>
+        <h2 class="cat-group-title">
+          <span class="cat-group-icon">{g.category.icon}</span>
+          <Tr zh={g.category.name} en={g.category.nameEn} />
+          <span class="cat-group-count">{g.items.length}</span>
+        </h2>
+        <PostList posts={g.items} />
+      </section>
+    ))}
+
+    {uncategorized.length > 0 && (
+      <section class="cat-group">
+        <h2 class="cat-group-title">
+          <span class="cat-group-icon">📄</span>
+          <Tr zh="其它" en="Others" />
+          <span class="cat-group-count">{uncategorized.length}</span>
+        </h2>
+        <PostList posts={uncategorized} />
+      </section>
+    )}
+
+    <Subscribe />
+  </div>
+</Base>

@@ -1,0 +1,95 @@
+---
+import Base from '../layouts/Base.astro';
+import Subscribe from '../components/Subscribe.astro';
+import Tr from '../components/Tr.astro';
+import { site } from '../config.js';
+import { getNews } from '../lib/news.js';
+
+const newsItems = await getNews();
+const featured = newsItems[0];
+const rest = newsItems.slice(1);
+const dashboards = site.dashboards || [];
+
+// 每篇新闻的链接：有外链用外链；否则有正文就跳详情页；都没有则不可点
+const linkFor = (n) => n.href || (n.hasBody ? `/news/${n.slug}` : '');
+
+function fmt(d) {
+  try {
+    return new Date(d).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+  } catch (e) {
+    return d;
+  }
+}
+---
+
+<Base title="新闻" description={`${site.name} —— 中立、易懂的马来西亚时事追踪`}>
+  <div class="wrap">
+    <header class="page-hero">
+      <span class="hero-kicker"><Tr zh="新闻 · 时事解析" en="NEWS &amp; ANALYSIS" /></span>
+      <h1><Tr zh="新闻 · 时事" en="News &amp; Current Affairs" /></h1>
+      <p class="page-hero-lead"><Tr zh="用中立、易懂的方式，追踪马来西亚的公共议题与时事。" en="Tracking Malaysia's public issues and current affairs — neutral and easy to follow." /></p>
+      <div class="page-hero-trust">
+        <span><Tr zh="不站边" en="No side taken" /></span>
+        <span><Tr zh="附官方来源" en="Official sources" /></span>
+        <span><Tr zh="州选实时仪表板" en="Live election dashboards" /></span>
+      </div>
+    </header>
+
+    {dashboards.length > 0 && (
+      <section class="news-dash">
+        <h2 class="news-dash-title"><span>📊</span> <Tr zh="州选仪表板" en="Election Dashboards" /></h2>
+        <div class="news-dash-grid">
+          {dashboards.map((d) => (
+            <a class="news-dash-card" href={`/news/${d.slug}`}>
+              <span class="news-dash-badge"><Tr zh="实时追踪" en="Live tracker" /></span>
+              <h3><Tr zh={d.title} en={d.titleEn} /></h3>
+              <p>
+                <Tr
+                  zh={`${d.totalSeats} 席 · 候选人得票率与逐席成绩`}
+                  en={`${d.totalSeats} seats · candidate vote share & seat-by-seat`}
+                />
+              </p>
+              <span class="news-readmore"><Tr zh="打开仪表板 →" en="Open dashboard →" /></span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    {newsItems.length === 0 ? (
+      <p class="empty-note"><Tr zh="新闻即将上线，敬请订阅。" en="News coming soon — subscribe to stay posted." /></p>
+    ) : (
+      <>
+        {featured && (() => { const L = linkFor(featured); return (
+          <a class={`news-feature${L ? '' : ' news-feature--static'}`} href={L || undefined}>
+            <div class="news-feature-meta">
+              <span class="news-tag"><Tr zh={featured.tag} en={featured.tagEn} /></span>
+              <span class="news-date">{fmt(featured.date)}</span>
+            </div>
+            <h2 class="news-feature-title"><Tr zh={featured.title} en={featured.titleEn} /></h2>
+            <p class="news-feature-summary"><Tr zh={featured.summary} en={featured.summaryEn} /></p>
+            {L && <span class="news-readmore"><Tr zh="阅读全文 →" en="Read more →" /></span>}
+          </a>
+        ); })()}
+
+        {rest.length > 0 && (
+          <div class="news-grid">
+            {rest.map((n) => { const L = linkFor(n); return (
+              <a class={`news-card${L ? '' : ' news-card--static'}`} href={L || undefined}>
+                <div class="news-card-meta">
+                  <span class="news-tag"><Tr zh={n.tag} en={n.tagEn} /></span>
+                  <span class="news-date">{fmt(n.date)}</span>
+                </div>
+                <h3 class="news-card-title"><Tr zh={n.title} en={n.titleEn} /></h3>
+                <p class="news-card-summary"><Tr zh={n.summary} en={n.summaryEn} /></p>
+                {L && <span class="news-readmore"><Tr zh="阅读全文 →" en="Read more →" /></span>}
+              </a>
+            ); })}
+          </div>
+        )}
+      </>
+    )}
+
+    <Subscribe />
+  </div>
+</Base>

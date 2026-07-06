@@ -1,0 +1,59 @@
+---
+import Base from '../layouts/Base.astro';
+import Social from '../components/Social.astro';
+import Tr from '../components/Tr.astro';
+import { site } from '../config.js';
+
+const doList = [
+  { icon: '🗣️', zh: '用易懂的语言解释选举制度、政府运作与法律权益', en: 'Explain elections, government and legal rights in plain language' },
+  { icon: '🙋', zh: '分享公民如何参与公共事务、表达诉求、监督权力', en: 'Show how citizens take part, speak up and hold power to account' },
+  { icon: '🧭', zh: '整理与马来西亚相关的公民知识，破除迷思', en: 'Curate Malaysia-specific civic knowledge and bust myths' },
+];
+---
+
+<Base title="关于我们" description={`关于 ${site.name}`}>
+  <div class="wrap">
+    <!-- 头像 + 介绍 -->
+    <section class="about-hero">
+      <img class="about-avatar" src={site.avatar} alt={site.name} />
+      <div class="about-hero-text">
+        <span class="hero-kicker">关于我们 · ABOUT</span>
+        <h1><Tr zh={site.name} en={site.nameEn} /></h1>
+        <p class="about-lead"><Tr zh={site.tagline} en={site.taglineEn} /></p>
+        <p class="about-intro"><Tr zh={site.intro} en={site.introEn} /></p>
+        <Social variant="bare" />
+      </div>
+    </section>
+
+    <!-- 我们做什么 -->
+    <section class="about-section">
+      <h2 class="section-title"><Tr zh="我们做什么" en="What we do" /></h2>
+      <div class="about-cards">
+        {doList.map((d) => (
+          <div class="about-card">
+            <span class="about-card-icon">{d.icon}</span>
+            <p><Tr zh={d.zh} en={d.en} /></p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- 愿景 -->
+    <section class="about-section about-vision">
+      <h2 class="section-title"><Tr zh="我们的愿景" en="Our vision" /></h2>
+      <p>
+        <Tr
+          zh="让公民教育走进每一个马来西亚人的日常生活，培养更有意识、更有力量、愿意参与的公民社会。"
+          en="To bring civic education into everyday Malaysian life, and grow a more conscious, empowered and participatory civil society."
+        />
+      </p>
+    </section>
+
+    <!-- 联系 -->
+    <section class="about-section">
+      <h2 class="section-title"><Tr zh="联系与关注" en="Contact & follow" /></h2>
+      <p><Tr zh="邮箱" en="Email" />：{site.email}</p>
+      <Social variant="footer" />
+    </section>
+  </div>
+</Base>

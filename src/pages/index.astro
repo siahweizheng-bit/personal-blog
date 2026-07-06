@@ -1,0 +1,260 @@
+---
+import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import PostList from '../components/PostList.astro';
+import Tr from '../components/Tr.astro';
+import { site } from '../config.js';
+import { getPosts, isNotionConfigured, inCategory } from '../lib/notion.js';
+import { getNews } from '../lib/news.js';
+
+const posts = await getPosts();
+const latest = posts.slice(0, 6);
+const countFor = (c) => posts.filter((p) => inCategory(p, c)).length;
+
+// 新闻解析（首页展示）
+const news = await getNews();
+const topNews = news[0];
+const dashboards = site.dashboards || [];
+const newsLink = (n) => (n ? (n.href || (n.hasBody ? `/news/${n.slug}` : '/news')) : '/news');
+
+// 首页橱窗：精选「深度手册」（付费 / 即将上架），最多 3 个
+const featured = (site.products || [])
+  .filter((p) => p.status === 'coming' || p.status === 'available')
+  .filter((p) => p.slug !== 'civic-bundle')
+  .slice(0, 3);
+const isImg = (c) => typeof c === 'string' && c.startsWith('/');
+---
+
+<Base description={site.intro}>
+  <Hero />
+
+  <div class="wrap">
+    <!-- 信任条：诚实的事实 -->
+    <section class="trust-bar reveal">
+      <div class="tb-item"><span class="tb-k">EN · 中文</span><span class="tb-d"><Tr zh="完整双语" en="Fully bilingual" /></span></div>
+      <div class="tb-item"><span class="tb-k">5</span><span class="tb-d"><Tr zh="个核心主题" en="Core topics" /></span></div>
+      <div class="tb-item"><span class="tb-k">100%</span><span class="tb-d"><Tr zh="事实查官方来源" en="Facts, official sources" /></span></div>
+      <div class="tb-item"><span class="tb-k">RM 0</span><span class="tb-d"><Tr zh="核心知识永远免费" en="Core knowledge, always free" /></span></div>
+    </section>
+
+    <!-- 新闻 · 时事解析 -->
+    <section class="home-news reveal">
+      <div class="home-news-head">
+        <div>
+          <span class="hn-kicker">📰 <Tr zh="新闻 · 时事解析" en="News & Analysis" /></span>
+          <h2 class="hn-title"><Tr zh="看懂本周马来西亚" en="Make sense of Malaysia, this week" /></h2>
+        </div>
+        <a class="see-all" href="/news"><Tr zh="全部新闻 →" en="All news →" /></a>
+      </div>
+      <div class="home-news-grid">
+        <a class="hn-feature" href={newsLink(topNews)}>
+          <span class="hn-feature-badge"><Tr zh="最新解析" en="Latest" /></span>
+          <h3 class="hn-feature-title">
+            {topNews ? <Tr zh={topNews.title} en={topNews.titleEn || topNews.title} /> : <Tr zh="时事解析陆续上线" en="Analysis coming soon" />}
+          </h3>
+          <p class="hn-feature-sum">
+            {topNews ? <Tr zh={topNews.summary} en={topNews.summaryEn || topNews.summary} /> : <Tr zh="用中立、易懂的方式，追踪马来西亚的公共议题。" en="Tracking Malaysia's public issues, neutrally." />}
+          </p>
+          <span class="news-readmore"><Tr zh="阅读解析 →" en="Read analysis →" /></span>
+        </a>
+        <div class="hn-side">
+          {dashboards.map((d) => (
+            <a class="hn-dash" href={`/news/${d.slug}`}>
+              <span class="hn-dash-live"><span class="hn-live-dot"></span><Tr zh="实时追踪" en="Live" /></span>
+              <span class="hn-dash-title"><Tr zh={d.title} en={d.titleEn} /></span>
+              <span class="hn-dash-meta"><Tr zh={`${d.totalSeats} 席 · 候选人得票率`} en={`${d.totalSeats} seats · vote share`} /></span>
+              <span class="hn-dash-go"><Tr zh="打开仪表板 →" en="Open dashboard →" /></span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 会员订阅展示区 -->
+    <section class="member-showcase reveal">
+      <div class="ms-visual reveal-left">
+        <div class="browser-mock">
+          <div class="bm-bar">
+            <span class="bm-dot" style="background:#ff5f57"></span>
+            <span class="bm-dot" style="background:#ffbd2e"></span>
+            <span class="bm-dot" style="background:#28c840"></span>
+            <span class="bm-url">plaincivil.my / <Tr zh="会员专享" en="Member-Exclusive" /></span>
+          </div>
+          <div class="bm-body">
+            <div class="bm-nav">
+              <span class="bm-brand"><Tr zh="公民白话文" en="Plain Civil" /></span>
+              <span class="bm-nav-links">
+                <span><Tr zh="文章" en="Articles" /></span><span><Tr zh="资源" en="Resources" /></span>
+                <span class="bm-nav-cta"><Tr zh="会员 ★" en="Member ★" /></span>
+              </span>
+            </div>
+            <div class="bm-content">
+              <div class="bm-tag"><Tr zh="会员专享" en="Member-Exclusive" /></div>
+              <div class="bm-headline"><Tr zh="大马政府的钱," en="Malaysian money," /> <br/> <Tr zh="去了哪里？", en="where's it go?" /></div>
+              <div class="bm-meta"><Tr zh="深度分析 · 政治制度" en="In-depth analysis · Political systems" /> · 2026-06</div>
+              <div class="bm-lines">
+                <span></span><span></span><span></span><span style="width:55%"></span>
+              </div>
+              <div class="bm-lock-bar">
+                <span class="bm-lock">🔒</span>
+                <span><Tr zh="这篇深度文章只对会员开放" en="Member-Only" /></span>
+                <span class="bm-lock-btn"><Tr zh="成为会员" en="Join Membership" /></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ms-text reveal-right">
+        <span class="ms-kicker"><Tr zh="公民白话文 · 会员订阅" en="Plain Civil · Membership" /></span>
+        <h2 class="ms-title"><Tr zh="不只是文章" en="More than articles" /><br /><Tr zh="是你的公民思考工具箱" en="Your civic thinking toolkit" /></h2>
+        <p class="ms-lead"><Tr
+          zh="一个人不需要太多「公民课」，但需要在关键时刻能想清楚。会员新闻信每周送达，帮你把制度知识变成真正能用的判断力。"
+          en="You don't need more civics classes — you need clarity when it counts. The members' newsletter arrives weekly, turning institutional knowledge into real judgment." /></p>
+        <ul class="ms-perks">
+          {site.membership?.perks?.map((p) => (
+            <li>
+              <span class="ms-check">✦</span>
+              <Tr zh={p.zh} en={p.en} />
+            </li>
+          ))}
+          <li><span class="ms-check">✦</span><Tr zh="支持独立、中立、零广告的公民教育" en="Support independent, neutral, ad-free civic education" /></li>
+        </ul>
+        <div class="ms-price">
+          <span class="ms-amount">{site.membership?.priceMonthly || 'RM 15'}</span>
+          <span class="ms-per"><Tr zh="/ 月" en="/ month" /></span>
+          <span class="ms-note"><Tr zh={site.membership?.priceNote || ''} en={site.membership?.priceNoteEn || ''} /></span>
+        </div>
+        <a class="ms-cta" href="/membership">
+          <Tr zh="了解会员计划 →" en="See membership plan →" />
+        </a>
+      </div>
+    </section>
+
+    <!-- Quick Links：一键入口 -->
+    <section class="quick-links reveal">
+      <a class="ql-card ql-news" href="/news">
+        <span class="ql-icon">📰</span>
+        <div class="ql-body">
+          <span class="ql-label"><Tr zh="新闻解析" en="News & analysis" /></span>
+          <span class="ql-desc"><Tr zh="时事解读 + 州选实时仪表板，五分钟看懂大事" en="Current-affairs explainers + live election dashboards" /></span>
+        </div>
+        <span class="ql-arrow">→</span>
+      </a>
+      <a class="ql-card ql-member" href="/resources/paid">
+        <span class="ql-icon">🏛️</span>
+        <div class="ql-body">
+          <span class="ql-label"><Tr zh="专享资源" en="Exclusive resources" /></span>
+          <span class="ql-desc"><Tr zh="只要RM16.99，就能获得公民手册三件套" en="Get a Civic-Bundle for only RM16.99" /></span>
+        </div>
+        <span class="ql-arrow">→</span>
+      </a>
+      <a class="ql-card ql-resources" href="/resources/free">
+        <span class="ql-icon">📚</span>
+        <div class="ql-body">
+          <span class="ql-label"><Tr zh="免费资源" en="Free resources" /></span>
+          <span class="ql-desc"><Tr zh="两本公民手册，帮助你提升公民素质" en="Two citizen handbooks to help you improve your civic qualities" /></span>
+        </div>
+        <span class="ql-arrow">→</span>
+      </a>
+    </section>
+
+    <!-- 三步走：理解 → 想清楚 → 行动 -->
+    <section class="ladder reveal">
+      <h2 class="section-title" style="margin-bottom:0.2rem"><Tr zh="我们怎么帮你" en="How we help you" /></h2>
+      <p class="ladder-sub"><Tr zh="一条完整的公民能力阶梯——不告诉你该想什么，只帮你想得更清楚。" en="A complete civic-skills ladder — we don't tell you what to think, we help you think more clearly." /></p>
+      <div class="ladder-grid">
+        <div class="ladder-card">
+          <span class="ladder-n">01</span>
+          <span class="ladder-ic">🏛️</span>
+          <h3><Tr zh="看懂" en="Understand" /></h3>
+          <p><Tr zh="政府怎么运作、权力如何分立、你的一票影响什么。先有地图，才不会迷路。" en="How government works, how power is split, what your vote affects. Get the map first." /></p>
+        </div>
+        <div class="ladder-arrow">→</div>
+        <div class="ladder-card">
+          <span class="ladder-n">02</span>
+          <span class="ladder-ic">🧭</span>
+          <h3><Tr zh="想清楚" en="Think clearly" /></h3>
+          <p><Tr zh="分辨假消息、查证来源、看穿带风向的套路。不被情绪和算法牵着走。" en="Spot fakes, check sources, see through spin. Don't get led by emotion or the algorithm." /></p>
+        </div>
+        <div class="ladder-arrow">→</div>
+        <div class="ladder-card">
+          <span class="ladder-n">03</span>
+          <span class="ladder-ic">📣</span>
+          <h3><Tr zh="去行动" en="Take action" /></h3>
+          <p><Tr zh="找对人、写对诉求、走对渠道。把关心的事，真正推动一点点。" en="Reach the right person, the right way. Actually move the things you care about." /></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 主题分类 -->
+    <section class="cat-section reveal">
+      <h2 class="section-title"><Tr zh="按主题浏览" en="Browse by topic" /></h2>
+      <div class="cat-grid">
+        {site.categories.map((c) => (
+          <a class="cat-card" href={`/category/${c.slug}`}>
+            <span class="cat-icon">{c.icon}</span>
+            <h3><Tr zh={c.name} en={c.nameEn} /></h3>
+            <p><Tr zh={c.desc} en={c.descEn} /></p>
+            <span class="cat-count"><Tr zh={`${countFor(c)} 篇 →`} en={`${countFor(c)} articles →`} /></span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <!-- 资源橱窗：深度手册 -->
+    {featured.length > 0 && (
+      <section class="shelf">
+        <div class="latest-head">
+          <h2 class="section-title" style="margin:0"><Tr zh="深度手册" en="In-depth guides" /></h2>
+          <a class="see-all" href="/resources"><Tr zh="查看全部资源 →" en="See all resources →" /></a>
+        </div>
+        <div class="shelf-grid">
+          {featured.map((p) => (
+            <a class="shelf-card" href="/resources">
+              <div class="shelf-cover">
+                {isImg(p.cover) ? <img src={p.cover} alt={p.title} /> : <span>{p.cover}</span>}
+                {p.status === 'coming' && <span class="shelf-flag"><Tr zh="即将上架" en="Coming soon" /></span>}
+              </div>
+              <h3><Tr zh={p.title} en={p.titleEn} /></h3>
+              <p><Tr zh={p.summary} en={p.summaryEn} /></p>
+              <span class="shelf-go"><Tr zh="了解更多 →" en="Learn more →" /></span>
+            </a>
+          ))}
+        </div>
+        <p class="shelf-note"><Tr zh="网站文章永远免费；手册是为想要「更深、更省事」的你准备的精编版。" en="Articles stay free — guides are the deeper, ready-to-use editions for when you want the shortcut." /></p>
+      </section>
+    )}
+
+    {!isNotionConfigured && (
+      <div class="notice">
+        当前显示<strong>示例文章</strong>。把 Notion 数据库共享给集成后，这里会自动换成真实文章。
+      </div>
+    )}
+
+    <!-- 最新文章 -->
+    <div class="latest-head">
+      <h2 class="section-title" id="latest"><Tr zh="最新文章" en="Latest articles" /></h2>
+      <a class="see-all" href="/articles"><Tr zh="查看全部 →" en="See all →" /></a>
+    </div>
+
+    {latest.length > 0
+      ? <PostList posts={latest} showTags={true} />
+      : <p class="empty-note"><Tr zh="文章即将上线，敬请订阅。" en="Articles coming soon — subscribe to be first." /></p>
+    }
+
+    <!-- 免费资源 / 加入会员 双入口 -->
+    <section class="home-cta">
+      <a class="home-cta-card free" href="/resources/free">
+        <span class="home-cta-k"><Tr zh="免费资源" en="Free resources" /></span>
+        <span class="home-cta-d"><Tr zh="PDF 指南免费下载，留邮箱即可领取。" en="Free PDF guides — enter your email to download." /></span>
+        <span class="home-cta-go"><Tr zh="前往下载 →" en="Get it free →" /></span>
+      </a>
+      <a class="home-cta-card member" href="/membership">
+        <span class="home-cta-k"><Tr zh="成为会员" en="Become a member" /></span>
+        <span class="home-cta-d"><Tr zh="RM15就能解锁每周的时事解析&国会解析" en="Unlock weekly current affairs and parliamentary analysis for RM15." /></span>
+        <span class="home-cta-go"><Tr zh="前往加入 →" en="Join →" /></span>
+      </a>
+    </section>
+  </div>
+</Base>

@@ -1,0 +1,234 @@
+---
+import Base from '../layouts/Base.astro';
+import SubscribeForm from '../components/SubscribeForm.astro';
+import Tr from '../components/Tr.astro';
+import { site } from '../config.js';
+
+const all = site.products || [];
+const isImg = (c) => typeof c === 'string' && c.startsWith('/');
+const endpoint = site.subscribe?.endpoint || '';
+const freeP = all.filter((p) => p.status === 'free');
+const paidP = all.filter((p) => (p.status === 'coming' || p.status === 'available') && p.slug !== 'civic-bundle' && p.slug !=='5in1-civic-bundle' && p.slug !=='7in1-civic-bundle');
+const bundle = all.find((p) => p.slug === 'civic-bundle');
+const bundle_5in1 = all.find((p) => p.slug === '5in1-civic-bundle');
+const bundle_7in1 = all.find((p) => p.slug === '7in1-civic-bundle');
+const hasPaid = paidP.length > 0 || Boolean(bundle);
+---
+
+<Base title="资源" description={`${site.name} 的公民教育资源与学习资料`}>
+  <div class="wrap">
+    <!-- 页头 -->
+    <header class="res-hero">
+      <span class="hero-kicker">资源 · RESOURCES</span>
+      <h1><Tr zh="学习资料与深度手册" en="Guides & in-depth toolkits" /></h1>
+      <p><Tr
+        zh="把零散的公民知识整理成一份份能直接用的资料。网站文章永远免费；手册是为想要「深度、专享内容」的你准备的精编版——中英双版，事实经官方来源核实。"
+        en="Scattered civic knowledge, packaged into guides you can actually use. Articles stay free; the guides are deeper, ready-to-use editions — bilingual, with facts verified against official sources." /></p>
+      <div class="res-trust">
+        <span>📘 <Tr zh="中英双版" en="Bilingual" /></span>
+        <span>✅ <Tr zh="事实查官方来源" en="Officially sourced" /></span>
+        <span>⚖️ <Tr zh="严守中立" en="Strictly neutral" /></span>
+      </div>
+    </header>
+
+    <!-- 免费下载 -->
+    {freeP.length > 0 && (
+      <section class="res-section">
+        <h2 class="res-h2"><span class="res-dot free"></span><Tr zh="免费下载" en="Free downloads" /></h2>
+        <div class="res-grid">
+          {freeP.map((p) => (
+            <article class="rcard">
+              <div class="rcard-cover">
+                {isImg(p.cover) ? <img src={p.cover} alt={p.title} /> : <span class="rcard-emoji">{p.cover}</span>}
+                <span class="rcard-badge free"><Tr zh="免费" en="Free" /></span>
+              </div>
+              <div class="rcard-body">
+                <h3><Tr zh={p.title} en={p.titleEn} /></h3>
+                <p class="rcard-sum"><Tr zh={p.summary} en={p.summaryEn} /></p>
+                {p.includes && (
+                  <ul class="rcard-inc">
+                    {p.includes.map((it) => (<li><span class="ck">✓</span> <Tr zh={it.zh} en={it.en} /></li>))}
+                  </ul>
+                )}
+                {p.files && (
+                  <div class="rcard-foot">
+                    <p class="rcard-note"><Tr zh="留下名字与邮箱，立即解锁下载（中英 PDF）。" en="Leave your name & email to unlock the download (bilingual PDF)." /></p>
+                    <div class="subscribe-wrap free-dl">
+                      <form class="js-subscribe subscribe-inline" data-endpoint={endpoint} data-source={"free-" + p.slug}>
+                        <input type="hidden" name="source" value={"free-" + p.slug} />
+                        <input class="sub-name" type="text" name="name" placeholder="你的名字" data-ph-en="Your name" required autocomplete="name" />
+                        <input class="sub-email" type="email" name="email" placeholder="@email.com" data-ph-en="@email.com" required autocomplete="email" />
+                        <button type="submit"><Tr zh="免费下载" en="Get it free" /></button>
+                      </form>
+                      <p class="form-msg" role="status" aria-live="polite"></p>
+                      <div class="dl-reveal" style="display:none">
+                        <p class="dl-ready"><Tr zh="✓ 搞定！点下面下载：" en="✓ Done! Download below:" /></p>
+                        <div class="dl-btns">
+                          <a class="support-btn" href={p.files.zh} download="">中文版 PDF</a>
+                          <a class="support-btn" href={p.files.en} download="">English PDF</a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- 深度手册（付费） --> 
+    {hasPaid && (
+      <section class="res-section">
+        <h2 class="res-h2"><span class="res-dot paid"></span><Tr zh="深度手册" en="In-depth guides" /></h2>
+        <!-- 优惠包 -->
+        {bundle && (
+          <div class="bundle-card">
+            <div class="bundle-emoji">{isImg(bundle.cover) ? <img src={bundle.cover} alt={bundle.title} /> : bundle.cover}</div>
+              <div class="bundle-main">
+                <div class="bundle-head">
+                  <h3><Tr zh={bundle.title} en={bundle.titleEn} /></h3>
+                  {bundle.status === 'coming'
+                      ?<span class="rcard-badge soon"><Tr zh="即将上架" en="Coming soon" /></span>
+                      :<span class="bundle-price-wrap"><s class="orig-price">{bundle.originalPrice}</s><span class="bundle-price">{bundle.price}</span></span>}
+                </div>
+                <p class="rcard-sum"><Tr zh={bundle.summary} en={bundle.summaryEn} /></p>
+                {bundle.includes && (
+                  <ul class="rcard-inc bundle-inc">
+                    {bundle.includes.map((it) => (<li><span class="ck">✓</span> <Tr zh={it.zh} en={it.en} /></li>))}
+                  </ul>
+                )}
+                <div class="bundle-foot">
+                  {bundle.status === 'coming' ? (
+                    <SubscribeForm variant="inline" source={"notify-" + bundle.slug} cta="上架通知我" ctaEn="Notify me"
+                      okZh="✓ 已记下！优惠包上架时第一时间 email 你。" okEn="✓ Noted! We'll email you first when the bundle launches." />
+                  ) : (
+                    <SubscribeForm variant="inline" source={"buy-" + bundle.slug} cta="购买整套（DuitNow）" ctaEn="Buy bundle (DuitNow)"
+                      okZh="✓ 已收到！请查收邮箱，我们会发你 DuitNow 付款码与领取方式。" okEn="✓ Got it! Check your inbox for the DuitNow QR and delivery details." />
+                  )}
+                </div>
+              </div>
+            </div>
+          )
+        }
+        {bundle_5in1 && (
+          <div class="bundle-card">
+            <div class="bundle-emoji">{isImg(bundle_5in1.cover) ? <img src={bundle_5in1.cover} alt={bundle_5in1.title} /> : bundle_5in1.cover}</div>
+              <div class="bundle-main">
+                <div class="bundle-head">
+                  <h3><Tr zh={bundle_5in1.title} en={bundle_5in1.titleEn} /></h3>
+                  {bundle_5in1.status === 'coming'
+                      ?<span class="rcard-badge soon"><Tr zh="即将上架" en="Coming soon" /></span>
+                      :<span class="bundle-price-wrap"><s class="orig-price">{bundle_5in1.originalPrice}</s><span class="bundle-price">{bundle_5in1.price}</span></span>}
+                </div>
+                <p class="rcard-sum"><Tr zh={bundle_5in1.summary} en={bundle_5in1.summaryEn} /></p>
+                {bundle_5in1.includes && (
+                  <ul class="rcard-inc bundle-inc">
+                    {bundle_5in1.includes.map((it) => (<li><span class="ck">✓</span> <Tr zh={it.zh} en={it.en} /></li>))}
+                  </ul>
+                )}
+                <div class="bundle-foot">
+                  {bundle_5in1.status === 'coming' ? (
+                    <SubscribeForm variant="inline" source={"notify-" + bundle_5in1.slug} cta="上架通知我" ctaEn="Notify me"
+                      okZh="✓ 已记下！优惠包上架时第一时间 email 你。" okEn="✓ Noted! We'll email you first when the 5in1-bundle launches." />
+                  ) : (
+                    <SubscribeForm variant="inline" source={"buy-" + bundle_5in1.slug} cta="购买整套（DuitNow）" ctaEn="Buy bundle (DuitNow)"
+                      okZh="✓ 已收到！请查收邮箱，我们会发你 DuitNow 付款码与领取方式。" okEn="✓ Got it! Check your inbox for the DuitNow QR and delivery details." />
+                  )}
+                </div>
+              </div>
+            </div>
+          )
+        }      
+        {bundle_7in1 && (
+          <div class="bundle-card">
+            <div class="bundle-emoji">{isImg(bundle_7in1.cover) ? <img src={bundle_7in1.cover} alt={bundle_7in1.title} /> : bundle_7in1.cover}</div>
+              <div class="bundle-main">
+                <div class="bundle-head">
+                  <h3><Tr zh={bundle_7in1.title} en={bundle_7in1.titleEn} /></h3>
+                  {bundle_7in1.status === 'coming'
+                      ?<span class="rcard-badge soon"><Tr zh="即将上架" en="Coming soon" /></span>
+                      :<span class="bundle-price-wrap"><s class="orig-price">{bundle_7in1.originalPrice}</s><span class="bundle-price">{bundle_7in1.price}</span></span>}
+                </div>
+                <p class="rcard-sum"><Tr zh={bundle_7in1.summary} en={bundle_7in1.summaryEn} /></p>
+                {bundle_7in1.includes && (
+                  <ul class="rcard-inc bundle-inc">
+                    {bundle_7in1.includes.map((it) => (<li><span class="ck">✓</span> <Tr zh={it.zh} en={it.en} /></li>))}
+                  </ul>
+                )}
+                <div class="bundle-foot">
+                  {bundle_7in1.status === 'coming' ? (
+                    <SubscribeForm variant="inline" source={"notify-" + bundle_7in1.slug} cta="上架通知我" ctaEn="Notify me"
+                      okZh="✓ 已记下！优惠包上架时第一时间 email 你。" okEn="✓ Noted! We'll email you first when the 7in1-bundle launches." />
+                  ) : (
+                    <SubscribeForm variant="inline" source={"buy-" + bundle_7in1.slug} cta="购买整套（DuitNow）" ctaEn="Buy bundle (DuitNow)"
+                      okZh="✓ 已收到！请查收邮箱，我们会发你 DuitNow 付款码与领取方式。" okEn="✓ Got it! Check your inbox for the DuitNow QR and delivery details." />
+                  )}
+                </div>
+              </div>
+            </div>
+          )
+        }   
+        <!-- 购买怎么运作（DuitNow 手动）-->
+        <div class="buy-how">
+          <div class="bh-step"><div class="bh-number">1</div><Tr zh="填表留下名字 + email" en="Fill the form: name + email" /></div>
+          <div class="bh-arrow">→</div>
+          <div class="bh-step"><div class="bh-number">2</div><Tr zh="收到 DuitNow 付款码" en="Get a DuitNow QR by email" /></div>
+          <div class="bh-arrow">→</div>
+          <div class="bh-step"><div class="bh-number">3</div><Tr zh="付款后把 PDF 发给你" en="We email you the PDF" /></div>
+        </div>
+
+        <div class="res-grid">
+          {paidP.map((p) => (
+            <article class="rcard paid">
+              <div class="rcard-cover navy">
+                {isImg(p.cover) ? <img src={p.cover} alt={p.title} /> : <span class="rcard-emoji">{p.cover}</span>}
+                {p.status === 'coming'
+                  ? <span class="rcard-badge soon"><Tr zh="即将上架" en="Coming soon" /></span>
+                  : <span class="rcard-badge price">{p.price}</span>}
+              </div>
+              <div class="rcard-body">
+                <h3><Tr zh={p.title} en={p.titleEn} /></h3>
+                <p class="rcard-sum"><Tr zh={p.summary} en={p.summaryEn} /></p>
+                {p.includes && (
+                  <ul class="rcard-inc">
+                    {p.includes.map((it) => (<li><span class="ck">✓</span> <Tr zh={it.zh} en={it.en} /></li>))}
+                  </ul>
+                )}
+                <div class="rcard-foot">
+                  {p.status === 'coming' && (
+                    <Fragment>
+                      <p class="rcard-note"><Tr zh="订阅，上架第一时间通知你（订阅者享早鸟价）。" en="Subscribe — be first to know when it launches (subscribers get early-bird pricing)." /></p>
+                      <SubscribeForm variant="inline" source={"notify-" + p.slug} cta="上架通知我" ctaEn="Notify me"
+                        okZh="✓ 已记下！上架时第一时间 email 你，并附早鸟价。" okEn="✓ Noted! We'll email you first at launch with an early-bird price." />
+                    </Fragment>
+                  )}
+                  {p.status === 'available' && (
+                    <Fragment>
+                      <div class="rcard-price-row"><s class="orig-price">{p.originalPrice}</s><span class="rcard-price">{p.price}</span></div>
+                      <p class="rcard-note"><Tr zh="填表后我们 email 给你 DuitNow 付款码；付款后把 PDF 发给你。" en="After you submit, we'll email you a DuitNow QR; once paid, we'll send the PDF." /></p>
+                      <SubscribeForm variant="inline" source={"buy-" + p.slug} cta="购买（DuitNow）" ctaEn="Buy (DuitNow)"
+                        okZh="✓ 已收到！请查收邮箱，我们会发你 DuitNow 付款码与领取方式。" okEn="✓ Got it! Check your inbox — we'll send the DuitNow QR and how to receive it." />
+                    </Fragment>
+                  )}
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    )}
+
+    {all.length === 0 && (
+      <p class="empty-note"><Tr zh="资料正在制作中，敬请订阅。" en="Resources are in the works — subscribe to stay posted." /></p>
+    )}
+
+    <p class="resources-note">
+      <Tr
+        zh="提示：我们始终免费提供基础的公民知识普及；如果你需要更进一步的、网站未公开的独家深度解构，欢迎购买我们的完整手册。这是我们得以持续运营并保持独立性的核心基石。"
+        en="Note: buying a guide is one way to support us — but all core civic knowledge stays free in our articles."
+      />
+    </p>
+  </div>
+</Base>
