@@ -1,0 +1,28 @@
+---
+import Tr from './Tr.astro';
+import { site } from '../config.js';
+const {
+  variant = 'inline',
+  source = 'subscribe',
+  cta = '订阅', ctaEn = 'Subscribe',
+  okZh = '', okEn = '',
+} = Astro.props;
+const endpoint = site.subscribe?.endpoint || '';
+const ready = endpoint && !endpoint.includes('PASTE');
+---
+
+<div class="subscribe-wrap">
+  <form class={`js-subscribe subscribe-${variant}`} data-endpoint={endpoint} data-source={source} data-ok-zh={okZh} data-ok-en={okEn}>
+    <input type="hidden" name="source" value={source} />
+    <input class="sub-name" type="text" name="name" placeholder="你的名字" data-ph-en="Your name" required autocomplete="name" />
+    <input class="sub-email" type="email" name="email" placeholder="@gmail.com" data-ph-en="@gmail.com" required autocomplete="email" />
+    <button type="submit"><Tr zh={cta} en={ctaEn} /></button>
+  </form>
+  <p class="form-msg" role="status" aria-live="polite"></p>
+  {!ready && (
+    <p class="hero-note">
+      ⚠️ 订阅还差一步：按项目里的 <code>google-apps-script.gs</code> 建好 Google 表格接口后，
+      把部署网址填进 <code>src/config.js</code> 的 <code>subscribe.endpoint</code> 即可生效。
+    </p>
+  )}
+</div>

@@ -1,0 +1,46 @@
+---
+import { site } from '../config.js';
+const { variant = 'pills' } = Astro.props;
+
+const META = {
+  instagram: {
+    label: 'Instagram',
+    icon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="2.5" width="19" height="19" rx="5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.5" cy="6.5" r="1.1" fill="currentColor" stroke="none"/></svg>`,
+  },
+  facebook: {
+    label: 'Facebook',
+    icon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.8 3.7-3.8 1.1 0 2.2.2 2.2.2v2.4h-1.2c-1.2 0-1.6.8-1.6 1.6V12h2.7l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z"/></svg>`,
+  },
+  x: {
+    label: 'X',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.244 2H21.5l-7.62 8.727L23 22h-6.828l-5.34-6.588L4.8 22H1.5l8.13-9.31L1 2h6.91l4.864 6.035L18.244 2zm-1.2 18h1.9L7.2 3.9H5.2L17.044 20z"/></svg><path d="M9 4v16"/></svg>`,
+  },
+  threads: {
+    label: 'Threads',
+    icon: `<svg fill="currentColor" aria-label="Threads" class="x1ypdohk xxk0z11" fill="var(--icon-primary)" role="img" shape-rendering="geometricPrecision" viewBox="0 0 375.61 375.61" xmlns="http://www.w3.org/2000/svg"><path d="M267.149,173.742c-.469-54.261-29.885-86.958-79.575-86.958-33.166,0-61.058,15.001-75.708,38.909l32.111,22.384c8.321-13.126,19.806-24.025,40.901-24.025,23.791,0,36.096,13.243,39.612,37.854-11.485-1.758-22.97-2.695-34.807-2.695-64.223,0-94.459,29.064-94.459,67.504,0,39.143,30.236,62.113,74.77,62.113,48.87,0,78.052-32.932,90.005-73.715,12.423,5.625,20.978,18.751,20.978,38.44,0,52.738-60.824,81.45-112.39,81.45-76.059,0-125.75-49.925-125.75-131.141,0-99.498,65.746-163.252,154.111-163.252,59.301,0,88.599,26.017,108.522,60.941l32.815-22.97C316.605,33.342,268.204.997,195.543.997,79.755.997,1,83.15,1,202.337c0,108.991,77.114,172.276,168.995,172.276,75.942,0,152.705-44.3,152.705-120.125,0-39.612-22.736-65.863-55.55-80.747ZM168.588,249.332c-16.759,0-31.525-7.969-31.525-22.619,0-23.087,28.361-30.119,56.136-30.119,10.548,0,20.861.703,30.002,2.696-6.563,30.002-26.017,50.042-54.613,50.042Z"></path></svg>`,
+  },
+};
+
+const links = Object.entries(site.social).filter(
+  ([, url]) => url && !url.includes('YOUR_')
+);
+const hasPlaceholder = Object.values(site.social).some((url) => url.includes('YOUR_'));
+---
+
+{links.length > 0 && (
+  <div class={`social social-${variant}`}>
+    {links.map(([key, url]) => (
+      <a href={url} target="_blank" rel="noopener" aria-label={META[key]?.label || key}>
+        <span class="social-icon" set:html={META[key]?.icon || ''} />
+        <span class="social-label">{META[key]?.label || key}</span>
+      </a>
+    ))}
+  </div>
+)}
+
+{variant === 'pills' && links.length === 0 && hasPlaceholder && (
+  <p class="social-hint">
+    社媒区块已就位 —— 把 <code>src/config.js</code> 里 <code>social</code> 的占位网址换成你们的
+    Instagram / Facebook / 小红书 真实主页，链接就会显示在这里。
+  </p>
+)}

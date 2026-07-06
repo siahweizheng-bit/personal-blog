@@ -1,0 +1,6 @@
+---
+// 双语文本：默认渲染中文，前端语言切换脚本会按需换成英文。
+// 用法：<Tr zh="文章" en="Articles" />
+const { zh, en } = Astro.props;
+---
+<span class="tr" data-en={en ?? zh}>{zh}</span>

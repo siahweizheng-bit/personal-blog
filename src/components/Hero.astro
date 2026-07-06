@@ -1,0 +1,82 @@
+---
+import Social from './Social.astro';
+import Tr from './Tr.astro';
+import { site } from '../config.js';
+---
+
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-panel">
+      <div class="hero-blob"></div>
+      <div class="hero-blob2"></div>
+      <div class="hero-grid">
+        <div class="hero-content">
+          <img class="hero-logo" src={site.avatar} alt={site.name} width="84" height="84" />
+          <span class="hero-kicker"><Tr zh="公民教育 · 马来西亚" en="CIVIC EDUCATION · MALAYSIA" /></span>
+          <h1 class="hero-title"><Tr zh={site.name} en={site.nameEn} /></h1>
+          <p class="hero-tagline"><Tr zh={site.tagline} en={site.taglineEn} /></p>
+          <p class="hero-intro"><Tr zh="不站任何一边，只把制度讲清楚。让你看懂政府怎么运作、想清楚再下判断、知道怎么行动——中英双语，事实经官方来源核实。" en="No side taken — just the system, made clear. Understand how government works, think before you judge, and know how to act — bilingual, with facts verified against official sources." /></p>
+          <div class="hero-cta">
+            <a class="btn-gold" href="/articles"><Tr zh="浏览文章 →" en="Browse articles →" /></a>
+            <a class="btn-ghost" href="/resources/free"><Tr zh="免费资源" en="Free resources" /></a>
+          </div>
+          <div class="hero-social"><Social variant="bare" /></div>
+        </div>
+
+        <div class="hero-art" aria-hidden="true">
+          <svg viewBox="0 0 360 340" xmlns="http://www.w3.org/2000/svg" role="img">
+            <defs>
+              <linearGradient id="bldg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#1b5cb8"/><stop offset="1" stop-color="#0a3d8f"/>
+              </linearGradient>
+              <linearGradient id="goldg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#ffe27a"/><stop offset="1" stop-color="#f4c531"/>
+              </linearGradient>
+            </defs>
+            <circle cx="180" cy="150" r="138" fill="rgba(255,255,255,0.06)"/>
+            <circle cx="180" cy="150" r="100" fill="rgba(255,255,255,0.05)"/>
+            <g>
+              <path d="M70 116 L180 70 L290 116 Z" fill="url(#goldg)"/>
+              <circle cx="180" cy="100" r="10" fill="#06245c" opacity="0.85"/>
+              <rect x="74" y="116" width="212" height="14" rx="2" fill="#cfe0f5"/>
+              <g fill="url(#bldg)">
+                <rect x="84" y="134" width="20" height="92" rx="3"/>
+                <rect x="120" y="134" width="20" height="92" rx="3"/>
+                <rect x="156" y="134" width="20" height="92" rx="3"/>
+                <rect x="192" y="134" width="20" height="92" rx="3"/>
+                <rect x="228" y="134" width="20" height="92" rx="3"/>
+                <rect x="256" y="134" width="20" height="92" rx="3"/>
+              </g>
+              <g fill="rgba(255,255,255,0.18)">
+                <rect x="84" y="134" width="6" height="92" rx="3"/>
+                <rect x="120" y="134" width="6" height="92" rx="3"/>
+                <rect x="156" y="134" width="6" height="92" rx="3"/>
+                <rect x="192" y="134" width="6" height="92" rx="3"/>
+                <rect x="228" y="134" width="6" height="92" rx="3"/>
+                <rect x="256" y="134" width="6" height="92" rx="3"/>
+              </g>
+              <rect x="66" y="228" width="228" height="10" rx="2" fill="#cfe0f5"/>
+              <rect x="56" y="240" width="248" height="11" rx="2" fill="#aec6ea"/>
+            </g>
+            <g transform="translate(214,196)">
+              <rect x="0" y="20" width="92" height="64" rx="8" fill="#fff"/>
+              <rect x="0" y="20" width="92" height="64" rx="8" fill="none" stroke="#dbe6f7" stroke-width="1.5"/>
+              <rect x="22" y="8" width="48" height="20" rx="4" fill="url(#goldg)"/>
+              <rect x="34" y="2" width="24" height="22" rx="3" fill="#fff" transform="rotate(-12 46 13)"/>
+              <path d="M40 16 l6 6 l10 -12" fill="none" stroke="#cc1438" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" transform="rotate(-12 46 13)"/>
+              <rect x="14" y="44" width="64" height="6" rx="3" fill="#e4ebf6"/>
+              <rect x="14" y="56" width="44" height="6" rx="3" fill="#e4ebf6"/>
+            </g>
+            <g>
+              <circle cx="62" cy="176" r="22" fill="url(#goldg)"/>
+              <path d="M52 192 l-6 14 l16 -8 z" fill="url(#goldg)"/>
+              <g fill="#06245c"><circle cx="54" cy="176" r="3.2"/><circle cx="62" cy="176" r="3.2"/><circle cx="70" cy="176" r="3.2"/></g>
+            </g>
+            <circle cx="300" cy="120" r="8" fill="rgba(244,197,49,0.6)"/>
+            <circle cx="320" cy="150" r="5" fill="rgba(255,255,255,0.5)"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

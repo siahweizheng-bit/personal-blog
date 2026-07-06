@@ -1,0 +1,48 @@
+---
+// 文章列表。每篇文章用 <Tr> 双语显示，语言切换自动响应。
+import { formatDate } from '../lib/notion.js';
+import Tr from './Tr.astro';
+const { posts = [], showTags = false } = Astro.props;
+
+function formatDateEn(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+---
+
+<ul class="post-list">
+  {posts.map((post) => (
+    <li class="post-item">
+      <a href={`/blog/${post.slug}`}>
+        <span class="post-date">
+          <Tr zh={formatDate(post.date)} en={formatDateEn(post.date)} />
+        </span>
+        <div class="post-body">
+          <h2>
+            <Tr zh={post.title} en={post.titleEn || post.title} />
+            {post.access === 'member' && (
+              <span class="post-lock">🔒 <Tr zh="会员" en="Member" /></span>
+            )}
+          </h2>
+          {(post.summary || post.summaryEn) && (
+            <p class="summary">
+              <Tr zh={post.summary || ''} en={post.summaryEn || post.summary || ''} />
+            </p>
+          )}
+          {showTags && post.tags.length > 0 && (
+            <>
+              <div class="tags" data-post-lang="zh">
+                {post.tags.map((t) => <span class="tag">{t}</span>)}
+              </div>
+              <div class="tags" data-post-lang="en">
+                {(post.tagsEn?.length ? post.tagsEn : post.tags).map((t) => <span class="tag">{t}</span>)}
+              </div>
+            </>
+          )}
+        </div>
+      </a>
+    </li>
+  ))}
+</ul>

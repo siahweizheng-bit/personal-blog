@@ -1,0 +1,33 @@
+---
+import SubscribeForm from './SubscribeForm.astro';
+import Tr from './Tr.astro';
+
+const perks = [
+  { zh: '每篇 5 分钟，读懂一个公民课题', en: '5-minute reads on one civic topic' },
+  { zh: '完全免费，随时可退订', en: 'Free forever, unsubscribe anytime' },
+  { zh: '中英文内容，照顾不同读者', en: 'Available in Chinese & English' },
+];
+---
+
+<section class="subscribe">
+  <div class="subscribe-inner">
+    <div class="subscribe-copy">
+      <span class="subscribe-badge">NEWSLETTER</span>
+      <h3><Tr zh="每周一封，把公民课补回来" en="One email a week — catch up on civics" /></h3>
+      <p>
+        <Tr
+          zh="留下名字与 Gmail，我们会把最新的公民教育内容直接送到你的收件箱。一起做更有意识的公民。"
+          en="Leave your name and Gmail, and we'll send the latest civic education straight to your inbox. Let's become more conscious citizens together."
+        />
+      </p>
+      <ul class="subscribe-perks">
+        {perks.map((k) => (
+          <li><span class="check">✓</span> <Tr zh={k.zh} en={k.en} /></li>
+        ))}
+      </ul>
+    </div>
+    <div class="subscribe-action">
+      <SubscribeForm variant="box" />
+    </div>
+  </div>
+</section>
