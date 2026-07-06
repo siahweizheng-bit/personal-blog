@@ -1,0 +1,30 @@
+<svg viewBox="0 0 420 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="搞定政府部门手册">
+  <defs>
+    <linearGradient id="bgOff" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9691a"/><stop offset="1" stop-color="#8a3908"/></linearGradient>
+    <linearGradient id="colOff" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9d6"/><stop offset="1" stop-color="#ffd3ad"/></linearGradient>
+  </defs>
+  <rect width="420" height="200" fill="url(#bgOff)"/>
+  <circle cx="352" cy="42" r="72" fill="#ffffff" opacity="0.06"/>
+  <circle cx="58" cy="174" r="54" fill="#ffe9d6" opacity="0.08"/>
+  <g transform="translate(210,104)">
+    <!-- pediment -->
+    <path d="M-92 -30 L0 -66 L92 -30 Z" fill="url(#colOff)"/>
+    <rect x="-88" y="-30" width="176" height="10" rx="2" fill="#ffe9d6"/>
+    <!-- columns -->
+    <g fill="#ffe9d6">
+      <rect x="-74" y="-16" width="16" height="70" rx="3"/><rect x="-44" y="-16" width="16" height="70" rx="3"/>
+      <rect x="-8" y="-16" width="16" height="70" rx="3"/><rect x="28" y="-16" width="16" height="70" rx="3"/>
+      <rect x="58" y="-16" width="16" height="70" rx="3"/>
+    </g>
+    <g fill="#c2560f" opacity="0.35">
+      <rect x="-74" y="-16" width="5" height="70" rx="3"/><rect x="-44" y="-16" width="5" height="70" rx="3"/>
+      <rect x="-8" y="-16" width="5" height="70" rx="3"/><rect x="28" y="-16" width="5" height="70" rx="3"/>
+      <rect x="58" y="-16" width="5" height="70" rx="3"/>
+    </g>
+    <rect x="-90" y="54" width="180" height="9" rx="2" fill="#ffe9d6"/>
+    <rect x="-98" y="65" width="196" height="9" rx="2" fill="#ffcfa3"/>
+    <!-- check tick badge -->
+    <circle cx="70" cy="-44" r="17" fill="#1f8a4c"/>
+    <path d="M62 -44 L68 -37 L79 -51" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

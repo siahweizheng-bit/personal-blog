@@ -1,0 +1,23 @@
+<svg viewBox="0 0 420 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="政府补助与津贴速查手册">
+  <defs>
+    <linearGradient id="bgAid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#12925c"/><stop offset="1" stop-color="#0a5236"/></linearGradient>
+    <linearGradient id="coinAid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe27a"/><stop offset="1" stop-color="#f4c531"/></linearGradient>
+  </defs>
+  <rect width="420" height="200" fill="url(#bgAid)"/>
+  <circle cx="352" cy="42" r="72" fill="#ffffff" opacity="0.05"/>
+  <circle cx="58" cy="172" r="56" fill="#ffe27a" opacity="0.07"/>
+  <g transform="translate(210,102)">
+    <!-- hand / palm -->
+    <path d="M-96 60 q6 -20 30 -22 l70 -2 q30 -1 46 -14 q14 -10 22 2 q6 10 -6 20 q-26 22 -64 26 l-58 6 z" fill="#dff0e6" opacity="0.9"/>
+    <!-- stacked coins -->
+    <g>
+      <ellipse cx="10" cy="-34" rx="46" ry="15" fill="url(#coinAid)"/>
+      <rect x="-36" y="-34" width="92" height="20" fill="url(#coinAid)"/>
+      <ellipse cx="10" cy="-14" rx="46" ry="15" fill="#f0b722"/>
+      <ellipse cx="10" cy="-34" rx="46" ry="15" fill="url(#coinAid)"/>
+      <text x="10" y="-28" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="800" fill="#0a5236">RM</text>
+    </g>
+    <ellipse cx="-52" cy="-52" rx="26" ry="9" fill="#ffe27a" opacity="0.85"/>
+    <ellipse cx="66" cy="-50" rx="22" ry="8" fill="#ffe27a" opacity="0.7"/>
+  </g>
+</svg>

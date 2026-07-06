@@ -1,0 +1,22 @@
+<svg viewBox="0 0 420 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="公民行动">
+  <defs>
+    <linearGradient id="bg3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0e4ba0"/><stop offset="1" stop-color="#06245c"/></linearGradient>
+    <linearGradient id="g3" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffe27a"/><stop offset="1" stop-color="#f4c531"/></linearGradient>
+  </defs>
+  <rect width="420" height="200" fill="url(#bg3)"/>
+  <circle cx="350" cy="48" r="64" fill="#ffffff" opacity="0.05"/>
+  <circle cx="58" cy="166" r="50" fill="#f4c531" opacity="0.08"/>
+  <!-- megaphone -->
+  <g transform="translate(150,100) rotate(-18)">
+    <path d="M-70 -22 L20 -34 L20 34 L-70 22 Z" fill="url(#g3)"/>
+    <rect x="-92" y="-16" width="24" height="32" rx="6" fill="#e4ebf6"/>
+    <rect x="20" y="-34" width="14" height="68" rx="6" fill="#cfe0f5"/>
+    <rect x="-30" y="34" width="12" height="34" rx="5" fill="#06245c" opacity="0.4"/>
+  </g>
+  <!-- sound waves -->
+  <g transform="translate(250,100)" fill="none" stroke="#ffe27a" stroke-width="6" stroke-linecap="round" opacity="0.9">
+    <path d="M0 -26 a30 30 0 0 1 0 52"/>
+    <path d="M22 -42 a52 52 0 0 1 0 84" opacity="0.6"/>
+    <path d="M44 -58 a74 74 0 0 1 0 116" opacity="0.35"/>
+  </g>
+</svg>

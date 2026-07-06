@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 320" width="100%" height="100%">
+  <defs>
+    <style>
+      .badge-text { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 14px; font-weight: bold; fill: #FFFFFF; text-anchor: middle; }
+      .label-text { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 11px; font-weight: bold; fill: #E2E8F0; text-anchor: middle; }
+      .sub-text { font-family: 'PingFang SC', sans-serif; font-size: 9px; fill: #A0AEC0; text-anchor: middle; }
+    </style>
+    <linearGradient id="shield-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4299E1" />
+      <stop offset="100%" stop-color="#2B6CB0" />
+    </linearGradient>
+    <linearGradient id="book-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#9B2C2C" />
+      <stop offset="100%" stop-color="#E53E3E" />
+    </linearGradient>
+    <linearGradient id="badge-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#D69E2E" />
+      <stop offset="100%" stop-color="#B7791F" />
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(120, 40)">
+    <rect x="-45" y="-15" width="90" height="26" rx="13" fill="url(#badge-grad)" />
+    <text class="badge-text" x="0" y="3">3 合 1</text>
+  </g>
+
+  <line x1="120" y1="56" x2="120" y2="85" stroke="#4A5568" stroke-width="1.5" stroke-dasharray="3,3" />
+
+  <g transform="translate(120, 115)">
+    <path d="M 0,-25 C 20,-25 30,-20 30,0 C 30,20 15,35 0,45 C -15,35 -30,20 -30,0 C -30,-20 -20,-25 0,-25 Z" fill="url(#shield-grad)" stroke="#63B3ED" stroke-width="1.5" />
+    <path d="M -8,-8 A 10,10 0 1,0 8,8 A 8,8 0 1,1 -8,-8 Z" fill="#F6AD55" transform="scale(0.7) translate(-3, -2)" />
+    <path d="M 40,-10 L 20,-10 L 25,-5" fill="none" stroke="#E53E3E" stroke-width="2" stroke-linecap="round" />
+    <path d="M 20,-10 L -5,-25 L -3,-15" fill="none" stroke="#48BB78" stroke-width="2.5" stroke-linecap="round" />
+    <text class="label-text" x="0" y="60">不被带风向</text>
+    <text class="sub-text" x="0" y="72">批判性思考</text>
+  </g>
+
+  <g transform="translate(55, 230)">
+    <rect x="-26" y="-35" width="52" height="70" rx="3" fill="#E2E8F0" />
+    <rect x="-30" y="-35" width="52" height="70" rx="3" fill="url(#book-grad)" />
+    <line x1="-26" y1="-35" x2="-26" y2="35" stroke="#FEB2B2" stroke-width="1" />
+    <rect x="-15" y="10" width="30" height="12" fill="#3182CE" opacity="0.7"/>
+    <polygon points="-10,10 0,-2 10,10" fill="#3182CE" opacity="0.7"/>
+    <text class="label-text" x="0" y="52">大马政府</text>
+    <text class="sub-text" x="0" y="64">看懂体制问责</text>
+  </g>
+
+  <g transform="translate(185, 230)">
+    <rect x="-21" y="-31" width="46" height="66" rx="2" fill="#4A5568" opacity="0.5" transform="rotate(4)" />
+    <rect x="-24" y="-34" width="46" height="66" rx="2" fill="#FFFFFF" />
+    <circle cx="-12" y="-18" r="3" fill="#48BB78" />
+    <line x1="-4" y1="-18" x2="14" y2="-18" stroke="#718096" stroke-width="2" stroke-linecap="round" />
+    
+    <circle cx="-12" y="-5" r="3" fill="#48BB78" />
+    <line x1="-4" y1="-5" x2="10" y2="-5" stroke="#718096" stroke-width="2" stroke-linecap="round" />
+    
+    <path d="M -15,22 L -5,15 L 5,20 L 15,10" fill="none" stroke="#3182CE" stroke-width="2" stroke-linecap="round" />
+    <text class="label-text" x="0" y="52">公民行动</text>
+    <text class="sub-text" x="0" y="64">从键盘到现实</text>
+  </g>
+
+  <path d="M 55,185 C 55,160 185,160 185,185" fill="none" stroke="#4A5568" stroke-width="1" stroke-dasharray="2,4" />
+</svg>

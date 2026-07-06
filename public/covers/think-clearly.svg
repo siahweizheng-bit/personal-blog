@@ -1,0 +1,27 @@
+<svg viewBox="0 0 420 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="批判性思考">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0a3d8f"/><stop offset="1" stop-color="#06245c"/></linearGradient>
+    <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe27a"/><stop offset="1" stop-color="#f4c531"/></linearGradient>
+  </defs>
+  <rect width="420" height="200" fill="url(#bg2)"/>
+  <circle cx="70" cy="44" r="60" fill="#ffffff" opacity="0.05"/>
+  <circle cx="360" cy="170" r="58" fill="#f4c531" opacity="0.07"/>
+  <!-- compass -->
+  <g transform="translate(168,100)">
+    <circle r="62" fill="#0e4ba0"/>
+    <circle r="62" fill="none" stroke="#f4c531" stroke-width="4"/>
+    <circle r="50" fill="none" stroke="#cfe0f5" stroke-width="1.5" opacity="0.5"/>
+    <polygon points="0,-44 12,0 0,44 -12,0" fill="#e4ebf6"/>
+    <polygon points="0,-44 12,0 0,0" fill="#cc1438"/>
+    <polygon points="0,44 -12,0 0,0" fill="#fff"/>
+    <circle r="6" fill="#06245c" stroke="#f4c531" stroke-width="2"/>
+  </g>
+  <!-- magnifier -->
+  <g transform="translate(300,118)" stroke="#ffe27a" stroke-width="9" fill="none" stroke-linecap="round">
+    <circle cx="0" cy="0" r="30" fill="#06245c"/>
+    <line x1="22" y1="22" x2="46" y2="46"/>
+  </g>
+  <g transform="translate(300,118)" stroke="#f4c531" stroke-width="4" fill="none" stroke-linecap="round">
+    <path d="M-12 -2 l8 8 l16 -18"/>
+  </g>
+</svg>

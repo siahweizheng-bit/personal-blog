@@ -1,0 +1,18 @@
+<svg viewBox="0 0 420 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="公民三件套">
+  <defs>
+    <linearGradient id="bg6" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0e4ba0"/><stop offset="1" stop-color="#06245c"/></linearGradient>
+    <linearGradient id="g6" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe27a"/><stop offset="1" stop-color="#f4c531"/></linearGradient>
+  </defs>
+  <rect width="420" height="200" fill="url(#bg6)"/>
+  <circle cx="350" cy="44" r="64" fill="#ffffff" opacity="0.05"/>
+  <circle cx="60" cy="168" r="50" fill="#f4c531" opacity="0.08"/>
+  <!-- three stacked books -->
+  <g transform="translate(210,150)">
+    <g transform="rotate(-3)"><rect x="-90" y="-22" width="180" height="22" rx="4" fill="#f4c531"/><rect x="-90" y="-22" width="14" height="22" fill="#cc9b00"/></g>
+    <g transform="translate(0,-24) rotate(2)"><rect x="-80" y="-22" width="160" height="22" rx="4" fill="#0a3d8f"/><rect x="-80" y="-22" width="14" height="22" fill="#06245c"/></g>
+    <g transform="translate(0,-48) rotate(-2)"><rect x="-70" y="-22" width="140" height="22" rx="4" fill="#cc1438"/><rect x="-70" y="-22" width="14" height="22" fill="#8f0d26"/></g>
+    <!-- star on top -->
+    <path transform="translate(0,-86)" fill="url(#g6)" d="M0 -16 L4.7 -5 L16 -5 L6.7 2.6 L10 14 L0 7 L-10 14 L-6.7 2.6 L-16 -5 L-4.7 -5 Z"/>
+  </g>
+  <text x="210" y="38" text-anchor="middle" fill="#cfe0f5" font-family="sans-serif" font-size="13" font-weight="700" letter-spacing="2">3 IN 1</text>
+</svg>

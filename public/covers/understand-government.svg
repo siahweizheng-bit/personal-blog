@@ -1,0 +1,26 @@
+<svg viewBox="0 0 420 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="看懂大马政府">
+  <defs>
+    <linearGradient id="bg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0e4ba0"/><stop offset="1" stop-color="#06245c"/></linearGradient>
+    <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe27a"/><stop offset="1" stop-color="#f4c531"/></linearGradient>
+  </defs>
+  <rect width="420" height="200" fill="url(#bg1)"/>
+  <circle cx="350" cy="40" r="70" fill="#ffffff" opacity="0.05"/>
+  <circle cx="60" cy="170" r="56" fill="#f4c531" opacity="0.07"/>
+  <g transform="translate(210,104)">
+    <path d="M-86 -22 L0 -58 L86 -22 Z" fill="url(#g1)"/>
+    <circle cx="0" cy="-37" r="8" fill="#06245c" opacity="0.85"/>
+    <rect x="-82" y="-22" width="164" height="11" rx="2" fill="#cfe0f5"/>
+    <g fill="#dfe9f8">
+      <rect x="-72" y="-7" width="15" height="74" rx="3"/><rect x="-44" y="-7" width="15" height="74" rx="3"/>
+      <rect x="-16" y="-7" width="15" height="74" rx="3"/><rect x="12" y="-7" width="15" height="74" rx="3"/>
+      <rect x="40" y="-7" width="15" height="74" rx="3"/><rect x="58" y="-7" width="15" height="74" rx="3"/>
+    </g>
+    <g fill="#0e4ba0" opacity="0.45">
+      <rect x="-72" y="-7" width="5" height="74" rx="3"/><rect x="-44" y="-7" width="5" height="74" rx="3"/>
+      <rect x="-16" y="-7" width="5" height="74" rx="3"/><rect x="12" y="-7" width="5" height="74" rx="3"/>
+      <rect x="40" y="-7" width="5" height="74" rx="3"/><rect x="58" y="-7" width="5" height="74" rx="3"/>
+    </g>
+    <rect x="-90" y="67" width="180" height="9" rx="2" fill="#cfe0f5"/>
+    <rect x="-98" y="78" width="196" height="9" rx="2" fill="#aec6ea"/>
+  </g>
+</svg>

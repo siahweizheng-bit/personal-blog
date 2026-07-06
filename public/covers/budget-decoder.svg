@@ -1,0 +1,23 @@
+<svg viewBox="0 0 420 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="读懂大马预算案">
+  <defs>
+    <linearGradient id="bgBud" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0e4ba0"/><stop offset="1" stop-color="#06245c"/></linearGradient>
+    <linearGradient id="barBud" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe27a"/><stop offset="1" stop-color="#f4c531"/></linearGradient>
+  </defs>
+  <rect width="420" height="200" fill="url(#bgBud)"/>
+  <circle cx="356" cy="40" r="70" fill="#ffffff" opacity="0.05"/>
+  <circle cx="60" cy="176" r="54" fill="#f4c531" opacity="0.07"/>
+  <g transform="translate(210,110)">
+    <!-- axis -->
+    <rect x="-96" y="46" width="192" height="4" rx="2" fill="#cfe0f5"/>
+    <rect x="-96" y="-56" width="4" height="106" rx="2" fill="#cfe0f5" opacity="0.7"/>
+    <!-- bars -->
+    <rect x="-74" y="6" width="26" height="42" rx="3" fill="#9cc0ee"/>
+    <rect x="-38" y="-16" width="26" height="64" rx="3" fill="#cfe0f5"/>
+    <rect x="-2" y="-42" width="26" height="90" rx="3" fill="url(#barBud)"/>
+    <rect x="34" y="-24" width="26" height="72" rx="3" fill="#cfe0f5"/>
+    <rect x="70" y="0" width="26" height="48" rx="3" fill="#9cc0ee"/>
+    <!-- trend line -->
+    <polyline points="-61,18 -25,-2 11,-30 47,-12 83,10" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+    <circle cx="11" cy="-30" r="5" fill="#ffffff"/>
+  </g>
+</svg>
