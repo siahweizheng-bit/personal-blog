@@ -1,0 +1,25 @@
+怎么发文章（本地 Markdown，用 Obsidian 写）
+============================================
+
+1. 在这个 src/posts/ 文件夹里新建一个 .md 文件，文件名就是网址后缀（slug），
+   例如 how-elections-work.md → 网址 /blog/how-elections-work
+
+2. 文件开头放「frontmatter」（两条 --- 之间），照下面填：
+
+---
+title: 文章标题
+date: 2026-06-20
+summary: 一句话摘要（列表页显示）
+tags: 选举与投票, 政治制度        （用逗号分隔；名字要和 config.js 里的分类一致）
+language: 中文                    （中文 或 English，二选一）
+access: free                     （free 公开 / member 会员专享，只显示锁，正文走 email）
+published: true                  （false = 草稿，不上线）
+---
+
+3. --- 下面就是正文，直接用 Markdown 写（## 小标题、**加粗**、- 列表、> 引用、[链接](网址)、图片等）。
+
+4. 一篇文章 = 一种语言。中英都要，就建两个文件（一个 language: 中文，一个 English）。
+
+5. 发布：存档 → 推到 Git / Vercel（或重新 npm run build 部署）。没有 token、不会失效。
+
+可删字段：titleEn、summaryEn、cover（封面图路径，如 /covers/xxx.svg）都是可选的。
