@@ -1,0 +1,516 @@
+---
+import Base from '../../layouts/Base.astro';
+import Subscribe from '../../components/Subscribe.astro';
+import Tr from '../../components/Tr.astro';
+import { site } from '../../config.js';
+import { getPosts, getPostHtml, getPostTeaser, getPostLocked, fullReadStats, formatDate } from '../../lib/notion.js';
+import { encryptMemberContent } from '../../lib/memberContent.js';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return Promise.all(
+    posts.map(async (post) => {
+      const isM = post.access === 'member';
+      return {
+        params: { slug: post.slug },
+        // 会员专享文章：只输出「免费试读」部分；「续读」部分加密后随页交付，
+        // 会员在页面上用邮箱验证解锁（明文不进入公开 HTML）。
+        props: {
+          post,
+          content: isM ? getPostTeaser(post) : await getPostHtml(post),
+          lockedEnc: isM ? encryptMemberContent(getPostLocked(post)) : null,
+        },
+      };
+    })
+  );
+}
+
+const { post, content, lockedEnc } = Astro.props;
+const memberEndpoint = site.subscribe?.endpoint || '';
+const canUnlock = Boolean(lockedEnc && memberEndpoint);
+const isMember = post.access === 'member';
+const bilingual = Boolean(content.en);
+// 会员付费墙上的「完整版约 N 分钟」诱因（仅统计长度，不输出正文）
+const fullRead = isMember ? fullReadStats(post) : null;
+const joinUrl = site.membership?.joinUrl || '/membership';
+
+// 面包屑：找第一个匹配的分类
+const firstTag = post.tags?.[0];
+const category = site.categories?.find(
+  (c) => c.name === firstTag || c.slug === firstTag || c.nameEn === firstTag
+);
+
+// ── 目录：给标题加 id，提取目录数组 ──
+function slugifyId(text) {
+  const base = text.trim().replace(/\s+/g, '-').replace(/[^\w一-鿿-]/g, '').toLowerCase();
+  return base || 'heading';
+}
+
+function processHtml(html) {
+  if (!html) return { processed: '', headings: [] };
+  const headings = [];
+  const seen = {};
+  const processed = html.replace(/<(h[23])([^>]*)>([\s\S]*?)<\/\1>/gi, (_, tag, attrs, inner) => {
+    const text = inner.replace(/<[^>]+>/g, '').trim();
+    let id = slugifyId(text);
+    seen[id] = (seen[id] || 0) + 1;
+    if (seen[id] > 1) id = `${id}-${seen[id]}`;
+    headings.push({ level: parseInt(tag[1]), text, id });
+    return `<${tag}${attrs} id="${id}">${inner}</${tag}>`;
+  });
+  return { processed, headings };
+}
+
+const { processed: zhHtml, headings: zhHeadings } = processHtml(content.zh);
+const { processed: enHtml, headings: enHeadings } = processHtml(content.en);
+const hasToc = !isMember && zhHeadings.length >= 2;
+
+// ── 字数统计 & 阅读时间 ──
+function countWords(html) {
+  if (!html) return { zhChars: 0, enWords: 0 };
+  const text = html.replace(/<[^>]+>/g, ' ').replace(/&[^;]+;/g, ' ');
+  const zhChars = (text.match(/[一-鿿㐀-䶿]/g) || []).length;
+  const enWords = (text.replace(/[一-鿿㐀-䶿]/g, ' ').match(/\b[a-zA-Z]+\b/g) || []).length;
+  return { zhChars, enWords };
+}
+
+const { zhChars, enWords } = countWords(content.zh || content.en);
+// 中文约 350 字/分钟，英文约 200 词/分钟
+const readMin = Math.max(1, Math.round((zhChars || 0) / 350 + (enWords || 0) / 200));
+const readTimeZh = zhChars > 0 ? `${zhChars} 字 · 约 ${readMin} 分钟` : `${enWords} 词 · 约 ${readMin} 分钟`;
+const readTimeEn = zhChars > 0 ? `${zhChars} chars · ~${readMin} min` : `${enWords} words · ~${readMin} min`;
+
+// ── 日期双语 ──
+function formatDateEn(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+const dateZh = formatDate(post.date);
+const dateEn = formatDateEn(post.date);
+---
+
+<Base title={post.title} description={post.summary} hideNav={true}>
+  <div class={hasToc ? 'wrap-article' : 'wrap-read'}>
+    <nav class="breadcrumb" aria-label="面包屑导航">
+      <a href="/articles"><Tr zh="文章" en="Articles" /></a>
+      {category && (
+        <>
+          <span class="bc-sep">／</span>
+          <a href={`/category/${category.slug}`}>
+            <Tr zh={category.name} en={category.nameEn} />
+          </a>
+        </>
+      )}
+      <span class="bc-sep">／</span>
+      <span class="bc-current">
+        <Tr zh={`《${post.title}》`} en={post.titleEn || post.title} />
+      </span>
+    </nav>
+    <div class={hasToc ? 'article-layout' : ''}>
+
+      {hasToc && (
+        <aside class="toc-sidebar">
+          <div class="toc-label"><Tr zh="目录" en="Directory" /></div>
+          <nav class="toc-nav" aria-label="文章目录">
+            {zhHeadings.map((h) => (
+              <a href={`#${h.id}`} class={`toc-link toc-h${h.level}`} data-toc data-toc-lang="zh">{h.text}</a>
+            ))}
+            {enHeadings.map((h) => (
+              <a href={`#${h.id}`} class={`toc-link toc-h${h.level}`} data-toc data-toc-lang="en">{h.text}</a>
+            ))}
+          </nav>
+        </aside>
+      )}
+
+      <div class="article-main">
+        <article>
+          <header class="post-head">
+            <h1><Tr zh={post.title} en={post.titleEn || post.title} /></h1>
+            <div class="meta">
+              <Tr zh={dateZh} en={dateEn} />
+
+              {post.tags.length > 0 && (
+                <> · <Tr
+                  zh={post.tags.join('、')}
+                  en={(post.tagsEn && post.tagsEn.length ? post.tagsEn : post.tags).join(', ')}
+                /></>
+              )}
+              {!isMember && zhChars + enWords > 0 && (
+                <span class="meta-wordcount"> · <Tr zh={readTimeZh} en={readTimeEn} /></span>
+              )}
+            </div>
+          </header>
+
+          {post.cover && <img class="post-cover" src={post.cover} alt={post.title} />}
+
+          {isMember ? (
+            <>
+              {(content.zh || content.en) && (
+                <div class={`article-body teaser-body${bilingual ? ' bilingual' : ''}`}>
+                  <div class="prose prose-zh" set:html={zhHtml} />
+                  {bilingual && <div class="prose prose-en" set:html={enHtml} />}
+                </div>
+              )}
+              <div class="paywall paywall-teaser">
+                <div class="lock-ic">🔒</div>
+                <h2><Tr zh="会员续读 · 完整深度分析" en="Members keep reading · full analysis" /></h2>
+                <p>
+                  <Tr zh="以上是本文的公开试读。完整的推演、数据与结论为会员专属——每周两篇深度解析，直接送到你的信箱。"
+                      en="That was the free preview. The full reasoning, data and conclusions are members-only — two deep-dives a week, straight to your inbox." />
+                </p>
+                {fullRead && fullRead.minutes > 0 && (
+                  <p class="paywall-meta">
+                    <Tr zh={`🔓 完整深度版 · 约 ${fullRead.minutes} 分钟阅读`} en={`🔓 Full deep-dive · ~${fullRead.minutes} min read`} />
+                  </p>
+                )}
+                <a class="support-btn" href={joinUrl} target={joinUrl.startsWith('http') ? '_blank' : null} rel="noopener">
+                  <Tr zh="成为会员，解锁全文 →" en="Join to unlock the full article →" />
+                </a>
+                <p class="paywall-fine">
+                  <Tr zh={`${site.membership?.priceMonthly || 'RM 15'} / 月 · 可随时取消`} en={`${site.membership?.priceMonthly || 'RM 15'} / month · cancel anytime`} />
+                </p>
+
+                {canUnlock && (
+                  <div class="member-unlock" id="member-unlock">
+                    <p class="mu-label"><Tr zh="已是会员？输入申请时的邮箱解锁：" en="Already a member? Enter your sign-up email to unlock:" /></p>
+                    <form class="mu-form">
+                      <input class="mu-email" type="email" name="email" required
+                        placeholder="you@email.com" autocomplete="email" />
+                      <button type="submit"><Tr zh="解锁全文" en="Unlock" /></button>
+                    </form>
+                    <p class="mu-msg" aria-live="polite"></p>
+                  </div>
+                )}
+              </div>
+
+              {canUnlock && (
+                <>
+                  <div class="member-full" id="member-full" hidden>
+                    <div class="mu-unlocked-bar">
+                      <span class="mu-unlocked-txt"></span>
+                      <button type="button" class="mu-signout"><Tr zh="退出解锁" en="Sign out" /></button>
+                    </div>
+                    <div class="member-full-body"></div>
+                  </div>
+                  <script type="application/json" id="member-payload" set:html={JSON.stringify({ iv: lockedEnc.iv, data: lockedEnc.data, endpoint: memberEndpoint })} />
+                </>
+              )}
+            </>
+          ) : (
+            <div class={`article-body${bilingual ? ' bilingual' : ''}`}>
+              <div class="prose prose-zh" set:html={zhHtml} />
+              {bilingual
+                ? <div class="prose prose-en" set:html={enHtml} />
+                : <p class="zh-only-notice">This article is currently only available in Chinese. / 本文暂无英文版。</p>
+              }
+            </div>
+          )}
+
+          <a class="back" href="/articles"><Tr zh="← 返回文章列表" en="← Back to articles" /></a>
+        </article>
+
+        <Subscribe />
+      </div>
+
+    </div>
+  </div>
+</Base>
+
+<style>
+.wrap-article {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+.article-layout {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  gap: 3rem;
+  align-items: start;
+}
+.toc-sidebar {
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  padding-bottom: 1rem;
+}
+.toc-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--soft);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--line);
+}
+.toc-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.toc-link {
+  display: block;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--soft);
+  text-decoration: none;
+  padding: 0.3rem 0.6rem;
+  border-left: 2px solid transparent;
+  border-radius: 0 4px 4px 0;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  word-break: break-all;
+}
+.toc-link:hover { color: var(--text); background: var(--accent-soft); }
+.toc-h3 { padding-left: 1.3rem; font-size: 0.82rem; }
+.toc-link.toc-active {
+  color: var(--accent);
+  border-left-color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 600;
+}
+
+/* 手机：目录折叠到文章上方 */
+@media (max-width: 860px) {
+  .wrap-article { padding: 0 1.25rem; }
+  .article-layout { grid-template-columns: 1fr; gap: 0; }
+  .toc-sidebar {
+    position: static;
+    max-height: none;
+    background: var(--accent-soft);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1.5rem;
+  }
+  .toc-label { margin-bottom: 0.5rem; }
+}
+
+/* 目录语言切换 */
+:global([data-lang="zh"]) [data-toc-lang="en"] { display: none; }
+:global([data-lang="en"]) [data-toc-lang="zh"] { display: none; }
+
+/* 仅中文版提示：中文模式隐藏，英文模式显示 */
+.zh-only-notice {
+  display: none;
+  margin-top: 1.5rem;
+  padding: 0.8rem 1.1rem;
+  background: #f8f5ee;
+  border-left: 3px solid var(--gold);
+  border-radius: 0 8px 8px 0;
+  font-size: 0.9rem;
+  color: var(--soft);
+}
+:global([data-lang="en"]) .zh-only-notice { display: block; }
+:global([data-lang="en"]) .bilingual .zh-only-notice { display: none; }
+
+/* 会员付费墙：免费试读 → 渐隐 → 会员续读 */
+.teaser-body { position: relative; }
+.paywall-teaser { position: relative; margin-top: 2.5rem; }
+.paywall-teaser::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: -110px;
+  height: 110px;
+  background: linear-gradient(to bottom, rgba(245,239,228,0), var(--bg));
+  pointer-events: none;
+}
+.paywall-meta { font-weight: 700; color: var(--navy); margin: 0.2rem 0 1.1rem; }
+.paywall-fine { color: var(--soft); font-size: 0.85rem; margin: 0.9rem 0 0; }
+
+/* ── 会员解锁框 ── */
+.member-unlock {
+  margin: 1.6rem auto 0;
+  max-width: 26rem;
+  padding-top: 1.3rem;
+  border-top: 1px dashed var(--line);
+}
+.mu-label { color: var(--soft); font-size: 0.9rem; margin: 0 0 0.6rem; }
+.mu-form { display: flex; gap: 0.55rem; }
+.mu-email {
+  flex: 1; min-width: 0;
+  padding: 0.65rem 0.9rem; font-size: 0.95rem;
+  border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--text);
+}
+.mu-email:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(10,61,143,0.12); }
+.mu-form button {
+  padding: 0.65rem 1.2rem; font-size: 0.92rem; font-weight: 700; white-space: nowrap;
+  background: var(--navy); color: #fff; border: none; border-radius: 10px; cursor: pointer;
+  transition: opacity 0.15s;
+}
+.mu-form button:hover { opacity: 0.9; }
+.mu-form button:disabled { opacity: 0.55; cursor: default; }
+.mu-msg { min-height: 1.2em; font-size: 0.88rem; color: var(--red); margin: 0.55rem 0 0; }
+.mu-msg.ok { color: #1a7f4b; }
+
+/* ── 解锁后的全文区 ── */
+.mu-unlocked-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  background: #eaf5ee; border: 1px solid #cfe8da; color: #135c38;
+  border-radius: 10px; padding: 0.55rem 0.95rem; font-size: 0.88rem;
+  margin: 2rem 0 1.4rem;
+}
+.mu-signout {
+  background: none; border: none; color: #135c38; text-decoration: underline;
+  font-size: 0.85rem; cursor: pointer; padding: 0; white-space: nowrap;
+}
+@media (max-width: 520px) { .mu-form { flex-direction: column; } }
+</style>
+
+<script>
+(function () {
+  const links = document.querySelectorAll('.toc-link[data-toc]');
+  if (!links.length) return;
+
+  // smooth scroll
+  links.forEach((l) => {
+    l.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = document.getElementById(l.getAttribute('href').slice(1));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  // active highlight
+  const targets = [...links]
+    .map((l) => document.getElementById(l.getAttribute('href').slice(1)))
+    .filter(Boolean);
+
+  const obs = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          links.forEach((l) => l.classList.remove('toc-active'));
+          const active = document.querySelector(`.toc-link[href="#${e.target.id}"]`);
+          if (active) active.classList.add('toc-active');
+        }
+      });
+    },
+    { rootMargin: '-15% 0px -70% 0px', threshold: 0 }
+  );
+
+  targets.forEach((t) => obs.observe(t));
+})();
+</script>
+
+<script>
+// ── 会员解锁：邮箱验证（Apps Script 查 Members 表）→ 取密钥 → 浏览器解密全文 ──
+(function () {
+  const payloadEl = document.getElementById('member-payload');
+  if (!payloadEl) return;
+  let payload;
+  try { payload = JSON.parse(payloadEl.textContent || '{}'); } catch (e) { return; }
+  if (!payload.data || !payload.endpoint) return;
+
+  const box = document.getElementById('member-unlock');
+  const form = box && box.querySelector('.mu-form');
+  const emailInput = box && box.querySelector('.mu-email');
+  const btn = form && form.querySelector('button');
+  const msgEl = box && box.querySelector('.mu-msg');
+  const fullWrap = document.getElementById('member-full');
+  const fullBody = fullWrap && fullWrap.querySelector('.member-full-body');
+  const unlockedTxt = fullWrap && fullWrap.querySelector('.mu-unlocked-txt');
+  const signout = fullWrap && fullWrap.querySelector('.mu-signout');
+  const paywall = document.querySelector('.paywall-teaser');
+  if (!form || !fullBody) return;
+
+  const LS_KEY = 'pcMemberAuth';
+  const lang = () => (document.documentElement.getAttribute('data-lang') === 'en' ? 'en' : 'zh');
+  const T = {
+    checking: { zh: '验证中…', en: 'Checking…' },
+    noMatch: { zh: '找不到有效的会员资格。请确认邮箱与申请时一致，或联系我们。', en: 'No active membership found for this email. Please check it matches your sign-up email.' },
+    netErr: { zh: '网络出错，请稍后再试。', en: 'Network error — please try again.' },
+    unlocked: { zh: '会员已解锁', en: 'Unlocked for member' },
+  };
+  const setMsg = (t, ok) => { if (msgEl) { msgEl.textContent = t || ''; msgEl.classList.toggle('ok', !!ok); } };
+
+  function b64ToBytes(b64) {
+    const bin = atob(b64);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+
+  async function decrypt(keyHex) {
+    const keyBytes = new Uint8Array((keyHex.match(/.{2}/g) || []).map((h) => parseInt(h, 16)));
+    const key = await crypto.subtle.importKey('raw', keyBytes, 'AES-GCM', false, ['decrypt']);
+    const plain = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: b64ToBytes(payload.iv) },
+      key,
+      b64ToBytes(payload.data)
+    );
+    return JSON.parse(new TextDecoder().decode(plain));
+  }
+
+  function show(contentObj, email) {
+    const bilingual = Boolean(contentObj.en);
+    const wrap = document.createElement('div');
+    wrap.className = 'article-body' + (bilingual ? ' bilingual' : '');
+    const zh = document.createElement('div');
+    zh.className = 'prose prose-zh';
+    zh.innerHTML = contentObj.zh || '';
+    wrap.appendChild(zh);
+    if (bilingual) {
+      const en = document.createElement('div');
+      en.className = 'prose prose-en';
+      en.innerHTML = contentObj.en;
+      wrap.appendChild(en);
+    }
+    fullBody.innerHTML = '';
+    fullBody.appendChild(wrap);
+    if (unlockedTxt) unlockedTxt.textContent = '✓ ' + T.unlocked[lang()] + (email ? ' · ' + email : '');
+    if (paywall) paywall.style.display = 'none';
+    fullWrap.hidden = false;
+  }
+
+  async function verify(email, silent) {
+    if (!silent) { setMsg(T.checking[lang()], true); if (btn) btn.disabled = true; }
+    try {
+      const r = await fetch(payload.endpoint + '?action=member-verify&email=' + encodeURIComponent(email));
+      const j = await r.json();
+      if (j && j.ok && j.key) {
+        const contentObj = await decrypt(j.key);
+        try { localStorage.setItem(LS_KEY, JSON.stringify({ email: email, key: j.key })); } catch (e) {}
+        setMsg('');
+        show(contentObj, email);
+        return true;
+      }
+      if (!silent) setMsg(T.noMatch[lang()], false);
+      try { localStorage.removeItem(LS_KEY); } catch (e) {}
+    } catch (e) {
+      if (!silent) setMsg(T.netErr[lang()], false);
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+    return false;
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = (emailInput.value || '').trim().toLowerCase();
+    if (email) verify(email, false);
+  });
+
+  if (signout) {
+    signout.addEventListener('click', () => {
+      try { localStorage.removeItem(LS_KEY); } catch (e) {}
+      location.reload();
+    });
+  }
+
+  // 曾解锁过的设备：先用本地密钥直接解密（离线可用）；失败则静默重验。
+  (async function () {
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch (e) {}
+    if (!saved || !saved.key) return;
+    try {
+      const contentObj = await decrypt(saved.key);
+      show(contentObj, saved.email);
+    } catch (e) {
+      if (saved.email) verify(saved.email, true);
+    }
+  })();
+})();
+</script>
