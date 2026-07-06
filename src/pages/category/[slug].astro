@@ -1,0 +1,49 @@
+---
+import Base from '../../layouts/Base.astro';
+import Subscribe from '../../components/Subscribe.astro';
+import PostList from '../../components/PostList.astro';
+import Tr from '../../components/Tr.astro';
+import { site } from '../../config.js';
+import { getPosts, inCategory } from '../../lib/notion.js';
+
+export async function getStaticPaths() {
+  return site.categories.map((category) => ({
+    params: { slug: category.slug },
+    props: { category },
+  }));
+}
+
+const { category } = Astro.props;
+const all = await getPosts();
+const inCat = all.filter((p) => inCategory(p, category));
+---
+
+<Base title={category.name} description={category.desc}>
+  <div class="wrap-read">
+    <header class="post-head">
+      <div style="font-size:2.2rem">{category.icon}</div>
+      <h1><Tr zh={category.name} en={category.nameEn} /></h1>
+      <div class="meta"><Tr zh={category.desc} en={category.descEn} /></div>
+    </header>
+
+    <!-- 切换其它主题 -->
+    <div class="tags" style="margin-bottom:1.5rem">
+      {site.categories.map((c) => (
+        <a
+          class="tag tag-link"
+          href={`/category/${c.slug}`}
+          style={c.slug === category.slug ? 'background:var(--accent);color:#fff' : ''}
+        >
+          {c.icon} <Tr zh={c.name} en={c.nameEn} />
+        </a>
+      ))}
+    </div>
+
+    {inCat.length > 0
+      ? <PostList posts={inCat} showTags={false} />
+      : <p class="empty-note"><Tr zh={`「${category.name}」暂无文章，敬请订阅。`} en={`No articles in "${category.nameEn}" yet — subscribe to stay posted.`} /></p>
+    }
+
+    <Subscribe />
+  </div>
+</Base>
