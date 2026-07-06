@@ -1,0 +1,220 @@
+---
+import '../styles/global.css';
+import { site } from '../config.js';
+import Tr from '../components/Tr.astro';
+import Social from '../components/Social.astro';
+const { title, description, hideNav = false } = Astro.props;
+const year = new Date().getFullYear();
+const plausibleDomain = site.analytics?.plausibleDomain || '';
+---
+
+<!doctype html>
+<html lang="zh-CN" data-lang="zh">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title ? `${title} · ${site.name}` : site.name}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="alternate" type="application/rss+xml" title={site.name} href="/rss.xml" />
+    <link rel="icon" type="image/svg+xml" href="/avatar.jpg" />
+    {plausibleDomain && (
+      <script is:inline defer data-domain={plausibleDomain} src="https://plausible.io/js/script.js"></script>
+    )}
+    <script is:inline>
+      try { document.documentElement.setAttribute('data-lang', localStorage.getItem('lang') || 'zh'); } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <header class={`site-header${hideNav ? ' site-header--minimal' : ''}`}>
+      <div class="wrap">
+        <a class="brand" href="/">
+          <span><Tr zh={site.name} en={site.nameEn} /></span>
+          <svg class="flag" viewBox="0 0 56 28" role="img" aria-label="马来西亚国旗">
+            <defs>
+              <filter id="flagWave" x="-20%" y="-20%" width="140%" height="140%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.012 0.03" numOctaves="2" seed="3" result="noise">
+                  <animate attributeName="baseFrequency" dur="7s" values="0.012 0.03;0.022 0.05;0.012 0.03" repeatCount="indefinite" />
+                </feTurbulence>
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.2" xChannelSelector="R" yChannelSelector="G" />
+              </filter>
+              <clipPath id="flagClip"><rect width="56" height="28" rx="1.5" /></clipPath>
+            </defs>
+            <g filter="url(#flagWave)" clip-path="url(#flagClip)">
+              <rect width="56" height="28" fill="#fff" />
+              <g fill="#cc0001">
+                <rect y="0" width="56" height="2" /><rect y="4" width="56" height="2" />
+                <rect y="8" width="56" height="2" /><rect y="12" width="56" height="2" />
+                <rect y="16" width="56" height="2" /><rect y="20" width="56" height="2" />
+                <rect y="24" width="56" height="2" />
+              </g>
+              <rect width="25" height="14" fill="#010066" />
+              <circle cx="11" cy="7.5" r="4.6" fill="#ffcc00" />
+              <circle cx="13.2" cy="7" r="4.2" fill="#010066" />
+              <path fill="#ffcc00" d="M18.5 4.1 L19.32 6.37 L21.73 6.45 L19.83 7.93 L20.5 10.25 L18.5 8.9 L16.5 10.25 L17.17 7.93 L15.27 6.45 L17.68 6.37 Z" />
+            </g>
+          </svg>
+        </a>
+        {hideNav ? (
+          <button class="lang-toggle" type="button" aria-label="切换语言 / Switch language">EN</button>
+        ) : (
+          <nav class="nav">
+            <a href="/"><Tr zh="首页" en="Home" /></a>
+            <a href="/articles"><Tr zh="文章" en="Articles" /></a>
+            <a href="/news" class="nav-news"><Tr zh="新闻解析" en="News Analysis" /><span class="nav-badge">NEW</span></a>
+            <div class="nav-dropdown">
+              <a href="/resources"><Tr zh="资源" en="Resources" /></a>
+              <div class="nav-drop-menu">
+                <a href="/resources/free">📥 <Tr zh="免费资源" en="Free resources" /></a>
+                <a href="/resources/paid">📘 <Tr zh="付费资源" en="Paid guides" /></a>
+              </div>
+            </div>
+            <a href="/membership" class="nav-member"><Tr zh="会员" en="Member" /></a>
+            <a href="/about"><Tr zh="关于" en="About" /></a>
+            <a href="/support"><Tr zh="支持" en="Support" /></a>
+            <button class="lang-toggle" type="button" aria-label="切换语言 / Switch language">EN</button>
+          </nav>
+        )}
+      </div>
+    </header>
+
+    <slot />
+
+    <!-- Pre-footer CTA 条 -->
+    <div class="prefooter">
+      <div class="wrap prefooter-inner">
+        <div class="prefooter-text">
+          <span class="prefooter-title"><Tr zh="准备好深入了吗？" en="Ready to go deeper?" /></span>
+          <span class="prefooter-sub"><Tr zh="成为会员或获取深度手册，让公民教育真正用起来。" en="Join as a member or grab a guide — put civic knowledge to work." /></span>
+        </div>
+        <div class="prefooter-btns">
+          <a class="pf-btn pf-btn-gold" href="/membership"><Tr zh="加入会员 →" en="Become a member →" /></a>
+          <a class="pf-btn pf-btn-ghost" href="/resources"><Tr zh="前往资源 →" en="Browse resources →" /></a>
+        </div>
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="wrap footer-top">
+        <div class="footer-brand">
+          <div class="footer-logo"><Tr zh={site.name} en={site.nameEn} /></div>
+          <p class="footer-tag"><Tr zh={site.tagline} en={site.taglineEn} /></p>
+          <div class="footer-social-row"><Social variant="footer" /></div>
+        </div>
+        <div class="footer-links">
+          <h4><Tr zh="浏览" en="Explore" /></h4>
+          <a href="/"><Tr zh="首页" en="Home" /></a>
+          <a href="/articles"><Tr zh="文章" en="Articles" /></a>
+          <a href="/news"><Tr zh="新闻" en="News" /></a>
+          <a href="/about"><Tr zh="关于" en="About" /></a>
+          <a href="/support"><Tr zh="支持" en="Support" /></a>
+        </div>
+        <div class="footer-links">
+          <h4><Tr zh="快捷入口" en="Quick links" /></h4>
+          <a class="footer-ql-link footer-ql-member" href="/membership">
+            <span>🏛️</span><Tr zh="加入会员" en="Become a member" />
+          </a>
+          <a class="footer-ql-link footer-ql-res" href="/resources/free">
+            <span>📥</span><Tr zh="免费资源" en="Free resources" />
+          </a>
+          <a class="footer-ql-link footer-ql-res" href="/resources/paid">
+            <span>📘</span><Tr zh="付费资源" en="Paid guides" />
+          </a>
+        </div>
+      </div>
+      <div class="wrap footer-bottom">
+        © {year} {site.name} · <Tr zh="中立公民教育，带你看懂马来西亚" en="Neutral civic education for Malaysia" />
+      </div>
+    </footer>
+
+    <script>
+      // ── 滚动渐现动画 ──
+      (function () {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('revealed');
+                // 子元素（reveal-left / reveal-right）同步触发
+                entry.target.querySelectorAll('.reveal-left, .reveal-right').forEach((el) => {
+                  el.classList.add('revealed');
+                });
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.08, rootMargin: '0px 0px -48px 0px' }
+        );
+        document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+      })();
+
+      // ── 语言切换 ──
+      function applyLang(lang) {
+        document.documentElement.setAttribute('data-lang', lang);
+        document.querySelectorAll('.tr').forEach((el) => {
+          if (el.dataset.zh === undefined) el.dataset.zh = el.textContent;
+          el.textContent = lang === 'en' ? (el.dataset.en || el.dataset.zh) : el.dataset.zh;
+        });
+        document.querySelectorAll('[data-ph-en]').forEach((el) => {
+          if (el.dataset.phZh === undefined) el.dataset.phZh = el.getAttribute('placeholder') || '';
+          el.setAttribute('placeholder', lang === 'en' ? el.dataset.phEn : el.dataset.phZh);
+        });
+        document.querySelectorAll('.lang-toggle').forEach((b) => { b.textContent = lang === 'en' ? '中文' : 'EN'; });
+        try { localStorage.setItem('lang', lang); } catch (e) {}
+      }
+      let saved = 'zh';
+      try { saved = localStorage.getItem('lang') || 'zh'; } catch (e) {}
+      applyLang(saved);
+      document.querySelectorAll('.lang-toggle').forEach((b) => {
+        b.addEventListener('click', () => {
+          const cur = document.documentElement.getAttribute('data-lang') || 'zh';
+          applyLang(cur === 'en' ? 'zh' : 'en');
+        });
+      });
+
+      // ── 订阅表单提交（写入 Google 表格） ──
+      const curLang = () => (document.documentElement.getAttribute('data-lang') === 'en' ? 'en' : 'zh');
+      const MSG = {
+        notReady: { zh: '订阅功能尚未配置完成。', en: 'Subscription is not configured yet.' },
+        sending: { zh: '提交中…', en: 'Submitting…' },
+        ok: { zh: '🎉 订阅成功，谢谢你的支持！', en: '🎉 Subscribed! Thank you for your support.' },
+        err: { zh: '出了点问题，请稍后再试。', en: 'Something went wrong, please try again.' },
+      };
+      document.querySelectorAll('form.js-subscribe').forEach((form) => {
+        const wrap = form.closest('.subscribe-wrap');
+        const msg = wrap && wrap.querySelector('.form-msg');
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const endpoint = form.dataset.endpoint || '';
+          const btn = form.querySelector('button');
+          const setMsg = (t, ok) => { if (msg) { msg.textContent = t; msg.classList.toggle('ok', !!ok); } };
+          if (!endpoint || endpoint.includes('PASTE')) { setMsg(MSG.notReady[curLang()], false); return; }
+          const original = btn.textContent;
+          btn.disabled = true; btn.textContent = MSG.sending[curLang()];
+          try {
+            const body = new URLSearchParams(new FormData(form));
+            await fetch(endpoint, {
+              method: 'POST',
+              mode: 'no-cors',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+              body,
+            });
+            form.reset();
+            const reveal = wrap && wrap.querySelector('.dl-reveal');
+            if (reveal) {
+              reveal.style.display = 'block';
+              form.style.display = 'none';
+            } else {
+              const okZh = form.dataset.okZh, okEn = form.dataset.okEn;
+              const okMsg = okZh ? { zh: okZh, en: okEn || okZh } : MSG.ok;
+              setMsg(okMsg[curLang()], true);
+            }
+          } catch (err) {
+            setMsg(MSG.err[curLang()], false);
+          } finally {
+            btn.disabled = false; btn.textContent = original;
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
